@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/igdb-search.js": {
+      "maxDuration": 10
+    }
+  }
+}
