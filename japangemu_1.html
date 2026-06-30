@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JapanGemu — Valorador de Colección</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#09090f; --surface:#111118; --surface2:#17171f; --surface3:#1d1d27;
+  --border:rgba(255,255,255,0.07); --border2:rgba(255,255,255,0.13);
+  --red:#E8003D; --red2:#ff1a54; --red-dim:rgba(232,0,61,0.08); --red-border:rgba(232,0,61,0.22);
+  --gold:#C89B3C; --gold-dim:rgba(200,155,60,0.09); --gold-border:rgba(200,155,60,0.25);
+  --green:#00C07A; --green-dim:rgba(0,192,122,0.09); --green-border:rgba(0,192,122,0.25);
+  --blue:#3D8EF0; --blue-dim:rgba(61,142,240,0.09); --blue-border:rgba(61,142,240,0.25);
+  --text:#e8e8f0; --text2:#8888a8; --muted:#404058; --muted2:#666680;
+}
+body.light {
+  --bg:#f5f5f8; --surface:#fff; --surface2:#eeeef5; --surface3:#e4e4ee;
+  --border:rgba(0,0,0,0.07); --border2:rgba(0,0,0,0.13);
+  --red:#C4002F; --red2:#E8003D; --red-dim:rgba(196,0,47,0.06); --red-border:rgba(196,0,47,0.2);
+  --gold:#8A6000; --gold-dim:rgba(138,96,0,0.07); --gold-border:rgba(138,96,0,0.22);
+  --green:#006a40; --green-dim:rgba(0,106,64,0.07); --green-border:rgba(0,106,64,0.22);
+  --blue:#1a5fb4; --blue-dim:rgba(26,95,180,0.07); --blue-border:rgba(26,95,180,0.22);
+  --text:#12121a; --text2:#5a5a70; --muted:#b8b8cc; --muted2:#7a7a90;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:300;display:flex;align-items:center;justify-content:space-between;padding:0 1.8rem;height:58px;background:rgba(9,9,15,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+body.light nav{background:rgba(245,245,248,0.95)}
+.nav-logo{font-family:'Press Start 2P',monospace;font-size:0.62rem;letter-spacing:2px;user-select:none}
+.logo-j{color:var(--text)}.logo-g{color:var(--red)}
+.nav-tabs{display:flex;gap:1px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px}
+.nav-tab{padding:.35rem .9rem;border-radius:7px;border:none;background:transparent;color:var(--muted2);font-family:'Syne',sans-serif;font-size:.73rem;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
+.nav-tab:hover:not(.active){color:var(--text)}
+.nav-tab.active{background:var(--red);color:#fff}
+.nav-right{display:flex;align-items:center;gap:.7rem}
+.icon-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--muted2);cursor:pointer;font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:all .15s;position:relative}
+.icon-btn:hover{border-color:var(--border2);color:var(--text)}
+.notif-dot{position:absolute;top:7px;right:7px;width:5px;height:5px;background:var(--red);border-radius:50%;border:1.5px solid var(--bg)}
+.btn-primary{background:var(--red);color:#fff;border:none;padding:.42rem 1.1rem;border-radius:8px;font-family:'Syne',sans-serif;font-weight:800;font-size:.75rem;cursor:pointer;transition:opacity .15s;letter-spacing:.3px}
+.btn-primary:hover{opacity:.86}
+.btn-primary.wide{width:100%;padding:.72rem;font-size:.86rem}
+
+/* PAGES */
+.page{display:none;animation:fadeIn .22s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.wrap{max-width:1020px;margin:0 auto;padding:2rem 1.5rem;position:relative;z-index:1}
+
+/* HERO */
+.hero{text-align:center;padding:3.5rem 1.5rem 0;position:relative;z-index:2}
+.hero-eyebrow{font-size:.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:1rem}
+.hero-title{font-size:clamp(1.7rem,4vw,2.8rem);font-weight:800;line-height:1.15;margin-bottom:.8rem;letter-spacing:-.5px}
+.hero-title em{font-style:normal;color:var(--red)}
+.hero-sub{color:var(--text2);font-size:.88rem;max-width:440px;margin:0 auto 2.2rem;line-height:1.65}
+
+/* SEARCH */
+.search-outer{max-width:560px;margin:0 auto;position:relative;z-index:200}
+.search-filters{display:flex;justify-content:center;gap:.4rem;margin-bottom:.7rem;flex-wrap:wrap}
+.sf-btn{padding:.26rem .8rem;border-radius:100px;border:1px solid var(--border2);background:transparent;color:var(--muted2);font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;cursor:pointer;transition:all .15s}
+.sf-btn:hover{color:var(--text)}
+.sf-btn.active{background:var(--red-dim);border-color:var(--red-border);color:var(--red)}
+.search-box{display:flex;align-items:center;background:var(--surface);border:1.5px solid var(--border2);border-radius:12px;padding:0 1rem;transition:border-color .15s,box-shadow .15s}
+.search-box:focus-within{border-color:var(--red);box-shadow:0 0 0 3px var(--red-dim)}
+.search-ico{font-size:1rem;margin-right:.65rem;flex-shrink:0;color:var(--muted2)}
+.search-inp{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Syne',sans-serif;font-size:.95rem;font-weight:600;padding:.9rem 0}
+.search-inp::placeholder{color:var(--muted2);font-weight:400}
+.search-x{background:none;border:none;color:var(--muted2);cursor:pointer;font-size:.85rem;padding:.3rem;transition:color .15s;line-height:1}
+.search-x:hover{color:var(--red)}
+.search-drop{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:12px;overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,.5);z-index:400;animation:slideUp .15s ease}
+.sug-item{display:flex;align-items:center;gap:.85rem;padding:.72rem 1rem;cursor:pointer;transition:background .12s;border-bottom:1px solid var(--border)}
+.sug-item:last-child{border-bottom:none}
+.sug-item:hover{background:var(--surface2)}
+.sug-ico{width:36px;height:36px;border-radius:7px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.sug-img{width:36px;height:36px;border-radius:7px;object-fit:cover;flex-shrink:0;background:var(--surface3)}
+.sug-info{flex:1;min-width:0}
+.sug-name{font-weight:700;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sug-meta{font-size:.68rem;color:var(--text2);margin-top:.06rem}
+.sug-badge{font-size:.6rem;font-weight:700;padding:.13rem .38rem;border-radius:4px;background:var(--surface3);color:var(--muted2);flex-shrink:0;white-space:nowrap}
+.sug-loading{padding:1.1rem;text-align:center;color:var(--muted2);font-size:.78rem;display:flex;align-items:center;justify-content:center;gap:.5rem}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:2.5rem 1.5rem 4rem;position:relative;z-index:1}
+.empty-chips{display:flex;justify-content:center;gap:.5rem;flex-wrap:wrap;margin-bottom:1.1rem}
+.e-chip{padding:.45rem .85rem;background:var(--surface);border:1px solid var(--border);border-radius:7px;font-size:.73rem;font-weight:700;color:var(--text2);transition:border-color .15s}
+.e-chip:hover{border-color:var(--border2);color:var(--text)}
+.empty-hint{font-size:.73rem;color:var(--muted2)}
+
+/* RESULTS */
+.results{animation:slideUp .3s ease}
+.prod-header{display:flex;align-items:center;gap:1rem;padding:1.1rem 1.3rem;background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:1.1rem}
+.prod-ico{width:58px;height:58px;border-radius:9px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0}
+.prod-img{width:58px;height:58px;border-radius:9px;object-fit:cover;flex-shrink:0}
+.prod-name{font-size:1.05rem;font-weight:800;margin-bottom:.22rem}
+.prod-tags{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.ptag{font-size:.64rem;font-weight:700;padding:.12rem .42rem;border-radius:4px;background:var(--surface2);color:var(--text2)}
+.ptag-red{background:var(--red-dim);color:var(--red);border:1px solid var(--red-border)}
+.prod-actions{display:flex;gap:.5rem;flex-shrink:0;margin-left:auto}
+.btn-ghost{padding:.36rem .85rem;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;transition:all .15s}
+.btn-ghost:hover{color:var(--text);background:var(--surface2)}
+
+/* CONSENSO */
+.consensus{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.3rem;background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:1.3rem;flex-wrap:wrap;gap:1rem}
+.con-label{font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);margin-bottom:.28rem}
+.con-price{font-family:'DM Mono',monospace;font-size:2.1rem;font-weight:700;line-height:1}
+.con-range{font-size:.74rem;color:var(--text2);margin-top:.28rem}
+.con-sample{font-size:.7rem;color:var(--muted2)}
+
+/* PRICE GROUPS */
+.price-group{margin-bottom:1.7rem}
+.pg-header{display:flex;align-items:center;gap:.5rem;padding-bottom:.55rem;border-bottom:1px solid var(--border);margin-bottom:.7rem;flex-wrap:wrap}
+.pg-title{font-size:.82rem;font-weight:800}
+.pg-tag{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:.14rem .42rem;border-radius:4px;border:1px solid}
+.tag-ref{background:var(--gold-dim);border-color:var(--gold-border);color:var(--gold)}
+.tag-sold{background:var(--green-dim);border-color:var(--green-border);color:var(--green)}
+.tag-live{background:var(--blue-dim);border-color:var(--blue-border);color:var(--blue)}
+.pg-sub{font-size:.68rem;color:var(--muted2);margin-left:auto}
+
+/* REFERENCE ROW */
+.ref-row{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.82rem 1rem;margin-bottom:.4rem;transition:border-color .15s;cursor:pointer;text-decoration:none;color:inherit}
+.ref-row:hover{border-color:var(--border2)}
+.ref-source{display:flex;align-items:center;gap:.6rem;min-width:155px;flex-shrink:0}
+.ref-flag{font-size:.95rem}
+.ref-name{font-weight:700;font-size:.78rem}
+.ref-region{font-size:.64rem;color:var(--text2)}
+.ref-conds{flex:1;display:flex;gap:1.3rem;flex-wrap:wrap}
+.ref-cond-label{font-size:.6rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.3px}
+.ref-cond-val{font-family:'DM Mono',monospace;font-size:.86rem;font-weight:500;margin-top:.06rem}
+.ref-arrow{color:var(--muted2);font-size:.72rem;flex-shrink:0}
+
+/* LISTING ROW */
+.listing{display:flex;align-items:center;gap:.65rem;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:.62rem .9rem;margin-bottom:.32rem;transition:border-color .12s;text-decoration:none;color:inherit}
+.listing:hover{border-color:var(--border2)}
+.l-badge{font-size:.59rem;font-weight:700;padding:.13rem .4rem;border-radius:4px;flex-shrink:0;border:1px solid;white-space:nowrap}
+.b-ebay{background:var(--gold-dim);border-color:var(--gold-border);color:var(--gold)}
+.b-mercari{background:var(--red-dim);border-color:var(--red-border);color:var(--red)}
+.b-ml{background:var(--blue-dim);border-color:var(--blue-border);color:var(--blue)}
+.b-wallapop{background:rgba(100,60,200,.08);border-color:rgba(100,60,200,.22);color:#8855cc}
+.b-goldin{background:rgba(180,140,40,.09);border-color:rgba(180,140,40,.28);color:#b08820}
+.b-auction{background:var(--green-dim);border-color:var(--green-border);color:var(--green)}
+.l-title{flex:1;font-size:.76rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2)}
+.l-cond{font-size:.63rem;color:var(--muted2);flex-shrink:0}
+.l-price{font-family:'DM Mono',monospace;font-size:.86rem;font-weight:700;flex-shrink:0}
+.l-jpy{font-size:.65rem;color:var(--muted2);flex-shrink:0}
+.l-date{font-size:.63rem;color:var(--muted2);flex-shrink:0}
+.show-more{width:100%;padding:.52rem;background:transparent;border:1px dashed var(--border2);border-radius:8px;color:var(--muted2);font-size:.72rem;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;transition:all .15s;margin-top:.22rem}
+.show-more:hover{border-color:var(--red-border);color:var(--red)}
+
+/* CTA ROW */
+.cta-row{display:flex;gap:.65rem;margin-top:1.3rem;flex-wrap:wrap}
+.cta{flex:1;padding:.72rem 1rem;border-radius:10px;font-family:'Syne',sans-serif;font-size:.78rem;font-weight:800;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:.45rem;border:none}
+.cta-red{background:var(--red);color:#fff}.cta-red:hover{opacity:.86}
+.cta-out{background:var(--surface);color:var(--text2);border:1px solid var(--border2)!important}.cta-out:hover{border-color:var(--gold-border)!important;color:var(--gold)}
+
+/* PORTFOLIO */
+.page-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem}
+.page-h{font-size:1.35rem;font-weight:800}.page-h .acc{color:var(--red)}
+.page-sub{font-size:.76rem;color:var(--text2);margin-top:.22rem}
+.stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;margin-bottom:1.4rem}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.95rem 1.1rem}
+.stat-lbl{font-size:.61rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted2);margin-bottom:.3rem}
+.stat-val{font-family:'DM Mono',monospace;font-size:1.4rem;font-weight:700}
+.stat-ch{font-size:.68rem;font-weight:700;margin-top:.14rem}
+.up{color:var(--green)}.down{color:var(--red)}.flat{color:var(--muted2)}
+.coll-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.6rem}
+.filters{display:flex;gap:.3rem;flex-wrap:wrap}
+.ftab{padding:.26rem .78rem;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted2);font-size:.7rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s}
+.ftab:hover:not(.active){color:var(--text)}
+.ftab.active{border-color:var(--red-border);color:var(--red);background:var(--red-dim)}
+.sort-sel{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:.26rem .62rem;border-radius:6px;font-family:'Syne',sans-serif;font-size:.7rem;cursor:pointer}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:.8rem}
+.icard{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .2s,border-color .2s;animation:cardIn .3s ease both}
+.icard:hover{transform:translateY(-3px);border-color:var(--border2)}
+.icard-thumb{aspect-ratio:3/4;display:flex;align-items:center;justify-content:center;font-size:2.8rem;background:var(--surface2);position:relative;overflow:hidden}
+.icard-thumb img{width:100%;height:100%;object-fit:cover}
+.icard-thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.5))}
+.trend-b{position:absolute;top:7px;right:7px;z-index:2;padding:.17rem .38rem;border-radius:4px;font-size:.6rem;font-weight:800;font-family:'DM Mono',monospace}
+.tb-up{background:rgba(0,192,122,.9);color:#000}.tb-down{background:rgba(232,0,61,.9);color:#fff}.tb-flat{background:rgba(50,50,70,.9);color:#aaa}
+.icard-info{padding:.68rem .8rem;border-top:1px solid var(--border)}
+.icard-name{font-weight:800;font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.08rem}
+.icard-plat{font-size:.62rem;color:var(--text2);margin-bottom:.42rem}
+.icard-bot{display:flex;justify-content:space-between;align-items:center}
+.icard-price{font-weight:800;font-size:.88rem;font-family:'DM Mono',monospace}
+.icard-cond{font-size:.58rem;color:var(--muted2);background:var(--surface2);padding:.1rem .32rem;border-radius:3px}
+.add-tile{border:1.5px dashed var(--border2);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;cursor:pointer;min-height:255px;color:var(--muted2);font-size:.72rem;font-weight:700;transition:border-color .15s,color .15s}
+.add-tile .plus{font-size:1.8rem;font-weight:300}
+.add-tile:hover{border-color:var(--red-border);color:var(--red)}
+
+/* WISHLIST */
+.prem-banner{display:flex;align-items:center;gap:1rem;background:var(--surface);border:1px solid var(--gold-border);border-radius:12px;padding:1rem 1.3rem;margin-bottom:1.4rem;flex-wrap:wrap}
+.prem-icon{font-size:1.7rem;flex-shrink:0}
+.prem-txt{flex:1}.prem-txt strong{font-size:.83rem}
+.prem-txt p{font-size:.74rem;color:var(--text2);margin-top:.22rem;line-height:1.5}
+.btn-gold{background:var(--gold);color:#000;border:none;padding:.48rem 1.1rem;border-radius:8px;font-family:'Syne',sans-serif;font-weight:800;font-size:.74rem;cursor:pointer;transition:opacity .15s;flex-shrink:0}
+.btn-gold:hover{opacity:.84}
+.watch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:.8rem}
+.wcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.95rem 1.1rem;display:flex;flex-direction:column;gap:.72rem;transition:border-color .15s;cursor:pointer}
+.wcard:hover{border-color:var(--border2)}
+.wcard-top{display:flex;align-items:center;gap:.75rem}
+.wcard-ico{width:44px;height:44px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.wcard-title{font-weight:800;font-size:.82rem;margin-bottom:.1rem}
+.wcard-plat{font-size:.65rem;color:var(--text2)}
+.wcard-price-row{display:flex;align-items:baseline;justify-content:space-between}
+.wcard-price{font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:700}
+.wcard-target{font-size:.68rem;color:var(--muted2)}.wcard-target span{color:var(--gold);font-weight:700}
+.mini-chart{height:32px;width:100%}
+.wcard-actions{display:flex;gap:.38rem}
+.wa{flex:1;padding:.38rem .5rem;border-radius:6px;font-size:.68rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:opacity .15s;text-align:center;border:1px solid}
+.wa-buy{background:var(--gold-dim);border-color:var(--gold-border);color:var(--gold)}
+.wa-jp{background:var(--red-dim);border-color:var(--red-border);color:var(--red)}
+.wa-alert{background:var(--blue-dim);border-color:var(--blue-border);color:var(--blue)}
+.wa:hover{opacity:.72}
+.add-watch{display:flex;align-items:center;justify-content:center;gap:.5rem;background:transparent;border:1.5px dashed var(--border2);border-radius:12px;padding:1.1rem;color:var(--muted2);font-size:.74rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s;width:100%;margin-top:.8rem}
+.add-watch:hover{border-color:var(--blue-border);color:var(--blue)}
+
+/* DASHBOARD */
+.dash-grid{display:grid;grid-template-columns:2fr 1fr;gap:.8rem;margin-bottom:.8rem}
+.dash-block{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.2rem}
+.block-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem}
+.block-title{font-size:.82rem;font-weight:800}
+.btn-text{background:none;border:none;color:var(--muted2);font-size:.7rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:color .15s}
+.btn-text:hover{color:var(--text)}
+.t-tabs{display:flex;gap:2px}
+.ttab{padding:.2rem .52rem;border-radius:5px;background:transparent;border:1px solid var(--border);color:var(--muted2);font-size:.67rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s}
+.ttab.active{background:var(--red-dim);border-color:var(--red-border);color:var(--red)}
+.chart-val{font-family:'DM Mono',monospace;font-size:1.8rem;font-weight:700}
+.chart-ch{font-size:.73rem;font-weight:700;margin-top:.14rem}
+.mover-row{display:flex;align-items:center;gap:.65rem;padding:.55rem 0;border-bottom:1px solid var(--border)}
+.mover-row:last-child{border-bottom:none}
+.mover-rank{font-family:'DM Mono',monospace;font-size:.7rem;color:var(--muted2);width:16px;flex-shrink:0}
+.mover-rank.gold{color:var(--gold);font-weight:700}
+.mover-info{flex:1}.mover-n{font-size:.76rem;font-weight:700}.mover-p{font-size:.63rem;color:var(--text2)}
+.mover-right{text-align:right}
+.mover-price{font-family:'DM Mono',monospace;font-size:.8rem;font-weight:700}
+.mover-ch{font-size:.65rem;font-weight:700}
+.alert-row{display:flex;align-items:flex-start;gap:.72rem;padding:.7rem .4rem;border-bottom:1px solid var(--border);border-radius:6px;transition:background .12s;cursor:pointer}
+.alert-row:hover{background:var(--surface2)}
+.alert-ico{font-size:.95rem;flex-shrink:0;margin-top:.04rem}
+.alert-body{flex:1;font-size:.75rem;line-height:1.5;color:var(--text2)}.alert-body strong{color:var(--text)}
+.alert-ts{font-size:.63rem;color:var(--muted2);margin-top:.13rem}
+.alert-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:.26rem .6rem;border-radius:5px;font-size:.66rem;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s;flex-shrink:0}
+.alert-btn:hover{color:var(--text)}
+.trend-row{display:flex;align-items:center;gap:.8rem;padding:.7rem .4rem;border-bottom:1px solid var(--border);border-radius:6px;transition:background .12s;cursor:pointer}
+.trend-row:hover{background:var(--surface2)}
+.trend-row:last-child{border-bottom:none}
+.trend-ico{width:38px;height:38px;border-radius:7px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.trend-info{flex:1}.trend-n{font-size:.78rem;font-weight:700}.trend-m{font-size:.65rem;color:var(--text2)}
+.trend-right{text-align:right}
+.trend-price{font-family:'DM Mono',monospace;font-size:.8rem;font-weight:700}
+.trend-ch{font-size:.65rem;font-weight:700}
+
+/* MODALES */
+.modal-ov{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(6px)}
+.modal-ov.open{display:flex;animation:fadeIn .2s ease}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:18px;padding:1.7rem;max-width:400px;width:100%;position:relative;box-shadow:0 32px 80px rgba(0,0,0,.55)}
+.modal-x{position:absolute;top:.9rem;right:.9rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted2);width:29px;height:29px;border-radius:7px;cursor:pointer;font-size:.82rem;transition:all .15s;display:flex;align-items:center;justify-content:center}
+.modal-x:hover{color:var(--text);border-color:var(--border2)}
+.modal-logo{font-family:'Press Start 2P',monospace;font-size:.58rem;color:var(--red);text-align:center;margin-bottom:.9rem;letter-spacing:2px}
+.modal-title{font-size:1.05rem;font-weight:800;text-align:center;margin-bottom:.28rem}
+.modal-sub{font-size:.76rem;color:var(--text2);text-align:center;margin-bottom:1.2rem;line-height:1.5}
+.btn-google{width:100%;padding:.68rem;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;justify-content:center;gap:.55rem;margin-bottom:.85rem}
+.btn-google span{font-weight:900;font-size:.9rem;color:#4285F4}
+.modal-div{display:flex;align-items:center;gap:.75rem;color:var(--muted2);font-size:.68rem;margin-bottom:.85rem}
+.modal-div::before,.modal-div::after{content:'';flex:1;height:1px;background:var(--border)}
+.modal-inp{width:100%;padding:.68rem .88rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Syne',sans-serif;font-size:.82rem;outline:none;transition:border-color .15s;margin-bottom:.65rem}
+.modal-inp:focus{border-color:var(--red-border)}
+.modal-foot{font-size:.66rem;color:var(--muted2);text-align:center;margin-top:.65rem}
+.modal-foot a{color:var(--red);text-decoration:none}
+.modal-lbl{display:block;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);margin-bottom:.42rem}
+.cond-tabs{display:flex;gap:.32rem;margin-bottom:.85rem}
+.ctab{flex:1;padding:.44rem .3rem;border:1px solid var(--border);border-radius:7px;background:transparent;color:var(--muted2);font-family:'Syne',sans-serif;font-size:.66rem;font-weight:700;cursor:pointer;transition:all .15s;text-align:center}
+.ctab.active{border-color:var(--red-border);color:var(--red);background:var(--red-dim)}
+.price-wrap{display:flex;align-items:center;gap:.4rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0 .88rem}
+.price-curr{color:var(--muted2);font-weight:700;font-size:.88rem}
+.price-inp{flex:1;border:none;background:none;padding:.68rem 0;color:var(--text);font-family:'Syne',sans-serif;font-size:.82rem;outline:none}
+.sel-prod{display:flex;align-items:center;gap:.7rem;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.72rem .88rem;margin-bottom:.9rem}
+.sel-prod-name{font-weight:800;font-size:.82rem}
+.sel-prod-meta{font-size:.66rem;color:var(--text2)}
+.modal-search-res{max-height:210px;overflow-y:auto;background:var(--surface2);border-radius:8px;margin-top:.38rem}
+.prem-h{font-size:2.3rem;text-align:center;margin-bottom:.75rem}
+.prem-price-block{display:flex;align-items:flex-start;justify-content:center;gap:.18rem;margin:1rem 0}
+.prem-price{font-family:'DM Mono',monospace;font-size:2.8rem;font-weight:700;color:var(--gold)}
+.prem-det{padding-top:.6rem}.prem-curr{font-size:.95rem;font-weight:800;color:var(--gold);display:block}.prem-per{font-size:.7rem;color:var(--text2)}
+.prem-feats{list-style:none;margin-bottom:1.2rem}
+.prem-feats li{padding:.42rem 0;font-size:.78rem;border-bottom:1px solid var(--border);color:var(--text2)}
+.prem-feats li:last-child{border-bottom:none}
+
+/* DOTS LOADING */
+@keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
+.dot{display:inline-block;width:5px;height:5px;background:var(--red);border-radius:50%;animation:blink 1.1s infinite}
+.dot:nth-child(2){animation-delay:.18s}.dot:nth-child(3){animation-delay:.36s}
+.loading-row{display:flex;align-items:center;justify-content:center;gap:5px;padding:1.3rem;color:var(--muted2);font-size:.76rem}
+
+/* RESPONSIVE */
+@media(max-width:768px){.stats-strip{grid-template-columns:repeat(2,1fr)}.dash-grid{grid-template-columns:1fr}.nav-tab{padding:.32rem .55rem;font-size:.66rem}.hero-title{font-size:1.6rem}}
+@media(max-width:480px){nav{padding:0 1rem}.nav-logo{display:none}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo"><span class="logo-j">JAPAN</span><span class="logo-g">GEMU</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="goPage('valorador')">🔍 Valorador</button>
+    <button class="nav-tab" onclick="goPage('portfolio')">📦 Colección</button>
+    <button class="nav-tab" onclick="goPage('wishlist')">⭐ Wishlist</button>
+    <button class="nav-tab" onclick="goPage('dashboard')">📊 Dashboard</button>
+  </div>
+  <div class="nav-right">
+    <button class="icon-btn" onclick="toggleTheme()" title="Tema">🌙</button>
+    <button class="icon-btn" title="Notificaciones">🔔<span class="notif-dot"></span></button>
+    <div id="account-area">
+      <button class="btn-primary" onclick="openModal('login-modal')">Entrar</button>
+    </div>
+  </div>
+</nav>
+
+<!-- VALORADOR -->
+<div class="page active" id="page-valorador">
+  <div class="hero">
+    <div class="hero-eyebrow">🇯🇵 Precios del mercado japonés en español</div>
+    <h1 class="hero-title">¿Cuánto vale<br><em>tu colección?</em></h1>
+    <p class="hero-sub">Busca cualquier videojuego retro, consola o figura y consulta precios reales de eBay, Mercari JP, Wallapop y Mercado Libre.</p>
+    <div class="search-outer" id="search-outer">
+      <div class="search-filters">
+        <button class="sf-btn active" onclick="setFilter('all',this)">Todo</button>
+        <button class="sf-btn" onclick="setFilter('game',this)">Videojuegos</button>
+        <button class="sf-btn" onclick="setFilter('console',this)">Consolas</button>
+        <button class="sf-btn" onclick="setFilter('figure',this)">Figuras</button>
+      </div>
+      <div class="search-box">
+        <span class="search-ico">🔍</span>
+        <input class="search-inp" id="search-inp" type="text" placeholder="Zelda Ocarina, PS1, Dragon Ball Figuarts..." autocomplete="off" oninput="onSearch(this.value)" onkeydown="onSearchKey(event)">
+        <button class="search-x" id="search-x" onclick="clearSearch()" style="display:none">✕</button>
+      </div>
+      <div class="search-drop" id="search-drop" style="display:none"><div id="search-sugs"></div></div>
+    </div>
+  </div>
+
+  <div class="wrap results" id="results" style="display:none">
+    <div class="prod-header" id="prod-header"></div>
+    <div class="consensus" id="consensus"></div>
+    <div class="price-group">
+      <div class="pg-header">
+        <span class="pg-title">Valoración de referencia</span>
+        <span class="pg-tag tag-ref">Sin transacción</span>
+        <span class="pg-sub">PriceCharting · GameValueNow</span>
+      </div>
+      <div id="ref-prices"></div>
+    </div>
+    <div class="price-group">
+      <div class="pg-header">
+        <span class="pg-title">Últimas ventas cerradas</span>
+        <span class="pg-tag tag-sold">Precio real pagado</span>
+        <span class="pg-sub">Últimos 6 meses · incluye subastas</span>
+      </div>
+      <div id="sold-prices"></div>
+    </div>
+    <div class="price-group">
+      <div class="pg-header">
+        <span class="pg-title">En venta ahora</span>
+        <span class="pg-tag tag-live">Disponible hoy</span>
+      </div>
+      <div id="live-prices"></div>
+    </div>
+    <div class="cta-row" id="cta-row"></div>
+  </div>
+
+  <div class="empty-state" id="empty-state">
+    <div class="empty-chips">
+      <div class="e-chip">NES</div><div class="e-chip">SNES</div><div class="e-chip">N64</div>
+      <div class="e-chip">Game Boy</div><div class="e-chip">PS1</div><div class="e-chip">PS2</div>
+      <div class="e-chip">Mega Drive</div><div class="e-chip">Saturn</div><div class="e-chip">Figuras</div>
+    </div>
+    <p class="empty-hint">Más de 50.000 productos en nuestra base de datos</p>
+  </div>
+</div>
+
+<!-- PORTFOLIO -->
+<div class="page" id="page-portfolio">
+  <div class="wrap">
+    <div class="page-top">
+      <div><h2 class="page-h">Mi <span class="acc">Colección</span></h2><p class="page-sub">Valor actualizado en tiempo real según el mercado</p></div>
+      <button class="btn-primary" onclick="openAddCollection()">+ Añadir</button>
+    </div>
+    <div class="stats-strip" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stat">
+        <div class="stat-lbl">Valor total</div>
+        <div class="stat-val" id="s-total">$0</div>
+        <div class="stat-ch flat" id="s-trend">—</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Piezas</div>
+        <div class="stat-val" id="s-count">0</div>
+        <div class="stat-ch flat">en tu colección</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Ítem más valioso</div>
+        <div class="stat-val" id="s-top" style="font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+        <div class="stat-ch flat" id="s-top-price">—</div>
+      </div>
+    </div>
+    <div class="coll-bar">
+      <div class="filters">
+        <button class="ftab active" onclick="filterPortfolio('all',this)">Todos</button>
+        <button class="ftab" onclick="filterPortfolio('game',this)">Juegos</button>
+        <button class="ftab" onclick="filterPortfolio('console',this)">Consolas</button>
+        <button class="ftab" onclick="filterPortfolio('figure',this)">Figuras</button>
+      </div>
+      <select class="sort-sel" onchange="sortPortfolio(this.value)">
+        <option value="date">Más reciente</option>
+        <option value="value-desc">Mayor valor</option>
+        <option value="value-asc">Menor valor</option>
+      </select>
+    </div>
+    <div class="cards-grid" id="portfolio-grid"></div>
+  </div>
+</div>
+
+<!-- WISHLIST -->
+<div class="page" id="page-wishlist">
+  <div class="wrap">
+    <div class="page-top">
+      <div><h2 class="page-h">Mi <span class="acc">Wishlist</span></h2><p class="page-sub">Recibe alertas cuando baje el precio en cualquier mercado</p></div>
+      <button class="btn-primary" onclick="openAddWishlist()">+ Añadir</button>
+    </div>
+    <div class="prem-banner">
+      <div class="prem-icon">🔔</div>
+      <div class="prem-txt"><strong>Alertas de nuevo anuncio — 3 USD/mes</strong><p>Te avisamos en cuanto aparezca tu producto en venta en eBay, Mercari JP, Wallapop o Mercado Libre. Tú decides si el precio te conviene.</p></div>
+      <button class="btn-gold" onclick="openModal('prem-modal')">Activar alertas</button>
+    </div>
+    <div class="watch-grid" id="wishlist-grid"></div>
+    <button class="add-watch" onclick="openAddWishlist()">+ Añadir a wishlist</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page" id="page-dashboard">
+  <div class="wrap">
+    <h2 class="page-h" style="margin-bottom:1.2rem">Dashboard <span class="acc">& Mercado</span></h2>
+
+    <!-- Fila 1: Gráfica + Desglose colección -->
+    <div class="dash-grid" style="margin-bottom:.8rem">
+      <div class="dash-block">
+        <div class="block-top">
+          <span class="block-title">Valor de tu colección</span>
+          <div class="t-tabs">
+            <button class="ttab active" onclick="setRange('1m',this)">1M</button>
+            <button class="ttab" onclick="setRange('3m',this)">3M</button>
+            <button class="ttab" onclick="setRange('6m',this)">6M</button>
+            <button class="ttab" onclick="setRange('1y',this)">1A</button>
+          </div>
+        </div>
+        <div class="chart-val" id="chart-val">$0</div>
+        <div class="chart-ch up" id="chart-ch">—</div>
+        <canvas id="chart-canvas" height="120" style="margin-top:.85rem;width:100%"></canvas>
+      </div>
+      <div class="dash-block">
+        <div class="block-top"><span class="block-title">Tu colección por categoría</span></div>
+        <div id="coll-breakdown"></div>
+      </div>
+    </div>
+
+    <!-- Fila 2: Mercado hoy - subidas y bajadas -->
+    <div class="dash-grid" style="margin-bottom:.8rem">
+      <div class="dash-block">
+        <div class="block-top">
+          <span class="block-title">📈 Subidas esta semana</span>
+          <span class="pg-tag tag-sold" style="font-size:.58rem">Actualizado hoy</span>
+        </div>
+        <div id="market-up"></div>
+      </div>
+      <div class="dash-block">
+        <div class="block-top">
+          <span class="block-title">📉 Bajadas esta semana</span>
+          <span class="pg-tag tag-live" style="font-size:.58rem">Actualizado hoy</span>
+        </div>
+        <div id="market-down"></div>
+      </div>
+    </div>
+
+    <!-- Fila 3: Oportunidades en Japón -->
+    <div class="dash-block" style="margin-bottom:.8rem">
+      <div class="block-top">
+        <span class="block-title">🇯🇵 Oportunidades en Japón</span>
+        <span class="pg-tag tag-ref" style="font-size:.58rem">Más baratos en Mercari JP</span>
+      </div>
+      <p style="font-size:.72rem;color:var(--text2);margin-bottom:.9rem">Productos que en Japón están significativamente más baratos que en eBay USA ahora mismo.</p>
+      <div id="japan-opps"></div>
+    </div>
+
+    <!-- Fila 4: Alertas recientes + Más buscados -->
+    <div class="dash-grid">
+      <div class="dash-block">
+        <div class="block-top"><span class="block-title">🔔 Noticias del mercado</span></div>
+        <div id="alerts-list"></div>
+      </div>
+      <div class="dash-block">
+        <div class="block-top"><span class="block-title">🔥 Más buscados hoy</span></div>
+        <div id="top-movers"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL LOGIN -->
+<div class="modal-ov" id="login-modal" onclick="closeOutside(event,'login-modal')">
+  <div class="modal">
+    <button class="modal-x" onclick="closeModal('login-modal')">✕</button>
+    <div class="modal-logo">JAPANGEMU</div>
+    <div class="modal-title">Bienvenido</div>
+    <p class="modal-sub">Accede para guardar tu colección y activar alertas</p>
+    <button class="btn-google" onclick="doLogin()"><span>G</span> Continuar con Google</button>
+    <div class="modal-div"><span>o con email</span></div>
+    <input class="modal-inp" id="login-email" type="email" placeholder="tu@email.com">
+    <button class="btn-primary wide" onclick="doLogin()">Entrar →</button>
+    <div class="modal-foot">Al entrar aceptas los <a href="#">Términos de uso</a></div>
+  </div>
+</div>
+
+<!-- MODAL AÑADIR COLECCIÓN -->
+<div class="modal-ov" id="add-modal" onclick="closeOutside(event,'add-modal')">
+  <div class="modal">
+    <button class="modal-x" onclick="closeModal('add-modal')">✕</button>
+    <div class="modal-title">Añadir a mi colección</div>
+    <input class="modal-inp" id="add-search-inp" type="text" placeholder="Busca el juego o figura..." oninput="onModalSearch(this.value)">
+    <div id="add-search-res" class="modal-search-res"></div>
+    <div id="add-selected" style="display:none">
+      <div class="sel-prod" id="sel-prod-display"></div>
+      <label class="modal-lbl">Estado del ítem</label>
+      <div class="cond-tabs">
+        <button class="ctab active" onclick="setCond('loose',this)">Solo cartucho</button>
+        <button class="ctab" onclick="setCond('complete',this)">Completo (CIB)</button>
+        <button class="ctab" onclick="setCond('new',this)">Nuevo sellado</button>
+      </div>
+      <label class="modal-lbl">Precio que pagaste (opcional)</label>
+      <div class="price-wrap" style="margin-bottom:1rem">
+        <span class="price-curr">$</span>
+        <input class="price-inp" id="add-price" type="number" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <button class="btn-primary wide" onclick="confirmAdd()">Añadir a mi colección</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PREMIUM -->
+<div class="modal-ov" id="prem-modal" onclick="closeOutside(event,'prem-modal')">
+  <div class="modal">
+    <button class="modal-x" onclick="closeModal('prem-modal')">✕</button>
+    <div class="prem-h">⭐</div>
+    <div class="modal-title">JapanGemu Premium</div>
+    <p class="modal-sub">Alertas de precio en todos los mercados, incluyendo Japón</p>
+    <div class="prem-price-block">
+      <span class="prem-price">3</span>
+      <div class="prem-det"><span class="prem-curr">USD</span><span class="prem-per">/mes</span></div>
+    </div>
+    <ul class="prem-feats">
+      <li>🔔 Alerta cuando aparezca tu producto en venta</li>
+      <li>🇯🇵 Monitoreo de Mercari JP cada 30 minutos</li>
+      <li>🛒 Monitoreo de eBay, Wallapop y Mercado Libre</li>
+      <li>💰 Filtro opcional de precio máximo</li>
+      <li>📊 Historial de precios extendido — 12 meses</li>
+    </ul>
+    <button class="btn-primary wide" onclick="toast('🚀 Integración de pago próximamente');closeModal('prem-modal')">Empezar por 3$/mes</button>
+    <div class="modal-foot">Cancela cuando quieras · Sin permanencia</div>
+  </div>
+</div>
+
+<script>
+// ═══ ESTADO ═══
+const S = {
+  page: 'valorador', filter: 'all', product: null,
+  timer: null, cond: 'loose', addProd: null,
+  userId: localStorage.getItem('jg_uid') || null,
+  portfolio: JSON.parse(localStorage.getItem('jg_port') || '{"items":[],"wishlist":[]}'),
+  chartRange: '1m'
+};
+const JPY = 0.0067;
+
+// ═══ PLATAFORMAS ═══
+function platEmoji(p) {
+  if (!p) return '🎮';
+  const s = p.toLowerCase();
+  if (s.includes('figura') || s.includes('figure')) return '🗿';
+  if (s.includes('game boy') || s.includes('gameboy') || s.includes('gba') || s.includes('gbc')) return '🎮';
+  if (s.includes('super nintendo') || s.includes('snes')) return '🎮';
+  if (s.includes('nintendo 64') || s.includes('n64')) return '🎮';
+  if (s.includes('gamecube')) return '🎮';
+  if (s.includes('wii')) return '🎮';
+  if (s.includes('switch')) return '🎮';
+  if (s.includes('nes') && !s.includes('snes')) return '🕹️';
+  if (s.includes('playstation') || s.includes('ps1') || s.includes('ps2') || s.includes('ps3') || s.includes('psx') || s.includes('psp')) return '💿';
+  if (s.includes('mega drive') || s.includes('genesis') || s.includes('sega')) return '🕹️';
+  if (s.includes('saturn')) return '💿';
+  if (s.includes('dreamcast')) return '💿';
+  if (s.includes('neo geo')) return '🕹️';
+  if (s.includes('pc engine') || s.includes('turbografx')) return '🕹️';
+  if (s.includes('xbox')) return '🎮';
+  return '🎮';
+}
+
+// ═══ NAVEGACIÓN ═══
+function goPage(p) {
+  S.page = p;
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  document.querySelector(`.nav-tab[onclick="goPage('${p}')"]`).classList.add('active');
+  if (p === 'portfolio') renderPortfolio();
+  if (p === 'wishlist') renderWishlist();
+  if (p === 'dashboard') renderDashboard();
+}
+
+// ═══ BÚSQUEDA ═══
+function onSearch(v) {
+  document.getElementById('search-x').style.display = v ? 'block' : 'none';
+  clearTimeout(S.timer);
+  if (!v || v.trim().length < 2) { hideDrop(); return; }
+  S.timer = setTimeout(() => fetchSugs(v.trim()), 270);
+}
+function onSearchKey(e) {
+  if (e.key === 'Escape') hideDrop();
+  if (e.key === 'Enter') { const f = document.querySelector('.sug-item'); if (f) f.click(); }
+}
+function clearSearch() {
+  document.getElementById('search-inp').value = '';
+  document.getElementById('search-x').style.display = 'none';
+  hideDrop();
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'block';
+}
+function setFilter(f, btn) {
+  S.filter = f;
+  document.querySelectorAll('.sf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const v = document.getElementById('search-inp').value;
+  if (v.length >= 2) fetchSugs(v.trim());
+}
+
+// ═══ IGDB CONFIG ═══
+const IGDB_CLIENT_ID = 'dx3c0xf70g5akuwc5bzdfulcajh4za';
+const IGDB_SECRET    = 'ymwmq78s9khjv5l8518m4bhtgc8q0k';
+let _igdbToken = null;
+let _igdbTokenExpiry = 0;
+
+async function getIGDBToken() {
+  if (_igdbToken && Date.now() < _igdbTokenExpiry) return _igdbToken;
+  try {
+    const res = await fetch(
+      `https://id.twitch.tv/oauth2/token?client_id=${IGDB_CLIENT_ID}&client_secret=${IGDB_SECRET}&grant_type=client_credentials`,
+      { method: 'POST' }
+    );
+    const data = await res.json();
+    _igdbToken = data.access_token;
+    _igdbTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
+    return _igdbToken;
+  } catch(e) {
+    console.warn('IGDB token error:', e);
+    return null;
+  }
+}
+
+async function fetchSugs(q) {
+  showDrop();
+  document.getElementById('search-sugs').innerHTML = '<div class="sug-loading"><span class="dot"></span><span class="dot"></span><span class="dot"></span> Buscando...</div>';
+  // Primero buscar en catálogo local (funciona siempre, sin servidor)
+  const localRes = getLocalResults(q);
+  if (localRes.length > 0) renderSugs(localRes);
+
+  // Luego intentar IGDB en paralelo (funciona cuando hay servidor)
+  try {
+    const token = await getIGDBToken();
+    if (!token) return;
+
+    const body = `search ${q}; fields id,name,platforms.name,cover.url,first_release_date,category; where category = (0,4,8,9); limit 15;`;
+    const res = await fetch('https://api.igdb.com/v4/games', {
+      method: 'POST',
+      headers: {
+        'Client-ID': IGDB_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body
+    });
+    const games = await res.json();
+    if (!Array.isArray(games) || games.length === 0) return;
+
+    let igdbRes = games.filter(g => g.name).map(g => ({
+      id: 'igdb:' + g.id,
+      name: g.name,
+      platform: g.platforms?.[0]?.name || 'Desconocida',
+      type: 'game',
+      year: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear() : null,
+      img: g.cover?.url ? g.cover.url.replace('t_thumb','t_cover_big').replace('//','https://') : null
+    }));
+
+    // Combinar IGDB con locales (figuras y consolas)
+    const extras = getLocalResults(q).filter(i => i.type !== 'game');
+    let combined = [...igdbRes, ...extras];
+    if (S.filter !== 'all') combined = combined.filter(i => i.type === S.filter);
+    renderSugs(combined.slice(0, 15));
+
+  } catch(e) {
+    // IGDB bloqueado por CORS en archivo local — los resultados locales ya se mostraron
+  }
+}
+
+function getLocalResults(q) {
+  const local = [
+    // Nintendo
+    {id:'igdb:1020',name:'The Legend of Zelda: Ocarina of Time',platform:'Nintendo 64',type:'game',year:1998,img:'https://images.igdb.com/igdb/image/upload/t_cover_big/co4b6x.jpg'},
+    {id:'igdb:4972',name:'Super Mario 64',platform:'Nintendo 64',type:'game',year:1996,img:'https://images.igdb.com/igdb/image/upload/t_cover_big/co6msi.jpg'},
+    {id:'igdb:1905',name:'Chrono Trigger',platform:'Super Nintendo',type:'game',year:1995,img:'https://images.igdb.com/igdb/image/upload/t_cover_big/co1sji.jpg'},
+    {id:'igdb:2267',name:'The Legend of Zelda: A Link to the Past',platform:'Super Nintendo',type:'game',year:1991,img:null},
+    {id:'igdb:1638',name:'Super Metroid',platform:'Super Nintendo',type:'game',year:1994,img:null},
+    {id:'igdb:1070',name:'Donkey Kong Country',platform:'Super Nintendo',type:'game',year:1994,img:null},
+    {id:'igdb:3290',name:'The Legend of Zelda: Majora Mask',platform:'Nintendo 64',type:'game',year:2000,img:null},
+    {id:'igdb:4291',name:'Pokémon Rojo / Azul',platform:'Game Boy',type:'game',year:1996,img:null},
+    {id:'igdb:4292',name:'Pokémon Oro / Plata',platform:'Game Boy Color',type:'game',year:1999,img:null},
+    {id:'igdb:4293',name:'Pokémon Rubí / Zafiro',platform:'Game Boy Advance',type:'game',year:2002,img:null},
+    {id:'igdb:5580',name:'Super Mario World',platform:'Super Nintendo',type:'game',year:1990,img:null},
+    {id:'igdb:1376',name:'Super Mario Bros.',platform:'NES',type:'game',year:1985,img:null},
+    {id:'igdb:9168',name:'Street Fighter II',platform:'Super Nintendo',type:'game',year:1992,img:null},
+    {id:'igdb:7334',name:'Donkey Kong Country 2',platform:'Super Nintendo',type:'game',year:1995,img:null},
+    // PlayStation
+    {id:'igdb:7346',name:'Metal Gear Solid',platform:'PlayStation',type:'game',year:1998,img:'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wkb.jpg'},
+    {id:'igdb:113',name:'Final Fantasy VII',platform:'PlayStation',type:'game',year:1997,img:'https://images.igdb.com/igdb/image/upload/t_cover_big/co1x9q.jpg'},
+    {id:'igdb:2390',name:'Castlevania: Symphony of the Night',platform:'PlayStation',type:'game',year:1997,img:null},
+    {id:'igdb:1164',name:'Final Fantasy VIII',platform:'PlayStation',type:'game',year:1999,img:null},
+    {id:'igdb:1165',name:'Final Fantasy IX',platform:'PlayStation',type:'game',year:2000,img:null},
+    {id:'igdb:4386',name:'Crash Bandicoot',platform:'PlayStation',type:'game',year:1996,img:null},
+    {id:'igdb:7360',name:'Resident Evil 2',platform:'PlayStation',type:'game',year:1998,img:null},
+    {id:'igdb:3776',name:'Tekken 3',platform:'PlayStation',type:'game',year:1997,img:null},
+    {id:'igdb:5665',name:'Spyro the Dragon',platform:'PlayStation',type:'game',year:1998,img:null},
+    {id:'igdb:1116',name:'Silent Hill',platform:'PlayStation',type:'game',year:1999,img:null},
+    // Dragon Ball
+    {id:'igdb:1144',name:'Dragon Ball Z: Budokai',platform:'PlayStation 2',type:'game',year:2002,img:null},
+    {id:'igdb:2255',name:'Dragon Ball Z: Budokai Tenkaichi 3',platform:'PlayStation 2',type:'game',year:2007,img:null},
+    {id:'igdb:3301',name:'Dragon Ball GT: Final Bout',platform:'PlayStation',type:'game',year:1997,img:null},
+    {id:'igdb:6612',name:'Dragon Ball Z: Budokai Tenkaichi',platform:'PlayStation 2',type:'game',year:2005,img:null},
+    {id:'igdb:6613',name:'Dragon Ball Z: Budokai Tenkaichi 2',platform:'PlayStation 2',type:'game',year:2006,img:null},
+    {id:'igdb:7701',name:'Dragon Ball Z: Hyper Dimension',platform:'Super Nintendo',type:'game',year:1996,img:null},
+    {id:'igdb:7702',name:'Dragon Ball Z: Super Butouden',platform:'Super Nintendo',type:'game',year:1993,img:null},
+    {id:'igdb:7703',name:'Dragon Ball Z: Super Butouden 2',platform:'Super Nintendo',type:'game',year:1993,img:null},
+    {id:'igdb:7704',name:'Dragon Ball Z: Super Butouden 3',platform:'Super Nintendo',type:'game',year:1994,img:null},
+    {id:'igdb:8801',name:'Dragon Ball Legends',platform:'Android / iOS',type:'game',year:2018,img:null},
+    {id:'igdb:8802',name:'Dragon Ball Xenoverse',platform:'PlayStation 4',type:'game',year:2015,img:null},
+    {id:'igdb:8803',name:'Dragon Ball Xenoverse 2',platform:'PlayStation 4',type:'game',year:2016,img:null},
+    {id:'igdb:8804',name:'Dragon Ball FighterZ',platform:'PlayStation 4',type:'game',year:2018,img:null},
+    {id:'igdb:8805',name:'Dragon Ball Z: Kakarot',platform:'PlayStation 4',type:'game',year:2020,img:null},
+    // Sega
+    {id:'igdb:1074',name:'Sonic the Hedgehog',platform:'Mega Drive',type:'game',year:1991,img:null},
+    {id:'igdb:1075',name:'Sonic the Hedgehog 2',platform:'Mega Drive',type:'game',year:1992,img:null},
+    {id:'igdb:1076',name:'Sonic the Hedgehog 3',platform:'Mega Drive',type:'game',year:1994,img:null},
+    {id:'igdb:2140',name:'Streets of Rage 2',platform:'Mega Drive',type:'game',year:1992,img:null},
+    {id:'igdb:3302',name:'Shining Force II',platform:'Mega Drive',type:'game',year:1993,img:null},
+    // Otros clásicos
+    {id:'igdb:1038',name:'Earthbound',platform:'Super Nintendo',type:'game',year:1994,img:null},
+    {id:'igdb:2041',name:'Secret of Mana',platform:'Super Nintendo',type:'game',year:1993,img:null},
+    {id:'igdb:1080',name:'Mega Man X',platform:'Super Nintendo',type:'game',year:1993,img:null},
+    {id:'igdb:5512',name:'Contra',platform:'NES',type:'game',year:1987,img:null},
+    {id:'igdb:3566',name:'Ninja Gaiden',platform:'NES',type:'game',year:1988,img:null},
+    // Consolas
+    {id:'console:001',name:'Super Nintendo (SNES)',platform:'Consola',type:'console',year:1990,img:null},
+    {id:'console:002',name:'Nintendo 64',platform:'Consola',type:'console',year:1996,img:null},
+    {id:'console:003',name:'PlayStation 1 (PS1)',platform:'Consola',type:'console',year:1994,img:null},
+    {id:'console:004',name:'PlayStation 2 (PS2)',platform:'Consola',type:'console',year:2000,img:null},
+    {id:'console:005',name:'Sega Mega Drive',platform:'Consola',type:'console',year:1988,img:null},
+    {id:'console:006',name:'Sega Saturn',platform:'Consola',type:'console',year:1994,img:null},
+    {id:'console:007',name:'Sega Dreamcast',platform:'Consola',type:'console',year:1998,img:null},
+    {id:'console:008',name:'Game Boy',platform:'Consola portátil',type:'console',year:1989,img:null},
+    {id:'console:009',name:'Game Boy Color',platform:'Consola portátil',type:'console',year:1998,img:null},
+    {id:'console:010',name:'Game Boy Advance',platform:'Consola portátil',type:'console',year:2001,img:null},
+    {id:'console:011',name:'Neo Geo Pocket Color',platform:'Consola portátil',type:'console',year:1999,img:null},
+    {id:'console:012',name:'PC Engine / TurboGrafx-16',platform:'Consola',type:'console',year:1987,img:null},
+    {id:'console:013',name:'NES / Famicom',platform:'Consola',type:'console',year:1983,img:null},
+    // Figuras
+    {id:'figure:001',name:'Goku Super Saiyan — Ichiban Kuji',platform:'Figura · Bandai',type:'figure',year:2023,img:null},
+    {id:'figure:002',name:'Goku Ultra Instinct — SH Figuarts',platform:'Figura · Bandai',type:'figure',year:2023,img:null},
+    {id:'figure:003',name:'Vegeta SSJ Blue — SH Figuarts',platform:'Figura · Bandai',type:'figure',year:2022,img:null},
+    {id:'figure:004',name:'Gohan Beast — Ichibansho',platform:'Figura · Bandai',type:'figure',year:2023,img:null},
+    {id:'figure:005',name:'Luffy Gear 5 — Figuarts ZERO',platform:'Figura · Bandai',type:'figure',year:2024,img:null},
+    {id:'figure:006',name:'Zoro — SH Figuarts',platform:'Figura · Bandai',type:'figure',year:2023,img:null},
+    {id:'figure:007',name:'Naruto Uzumaki — Nendoroid',platform:'Figura · Good Smile',type:'figure',year:2022,img:null},
+    {id:'figure:008',name:'Saitama — Nendoroid',platform:'Figura · Good Smile',type:'figure',year:2021,img:null},
+    {id:'figure:009',name:'Eren Yeager — SH Figuarts',platform:'Figura · Bandai',type:'figure',year:2022,img:null},
+    {id:'figure:010',name:'Levi Ackerman — Nendoroid',platform:'Figura · Good Smile',type:'figure',year:2021,img:null},
+    {id:'figure:011',name:'Pikachu — Nendoroid',platform:'Figura · Good Smile',type:'figure',year:2020,img:null},
+    {id:'figure:012',name:'Kenshin Himura — SH Figuarts',platform:'Figura · Bandai',type:'figure',year:2022,img:null},
+  ];
+  const qL = q.toLowerCase();
+  const res = local.filter(i => i.name.toLowerCase().includes(qL) || i.platform.toLowerCase().includes(qL));
+  return res;
+}
+
+function getDemoResults(q, filter) {
+  return getLocalResults(q).filter(i => filter === 'all' || i.type === filter);
+}
+
+function renderSugs(items) {
+  const c = document.getElementById('search-sugs');
+  if (!items.length) { c.innerHTML = '<div class="sug-loading">Sin resultados</div>'; return; }
+  c.innerHTML = '';
+  items.slice(0, 12).forEach(item => {
+    const d = document.createElement('div');
+    d.className = 'sug-item';
+    const thumb = item.img
+      ? `<img class="sug-img" src="${item.img}" alt="" onerror="this.outerHTML='<div class=sug-ico>${platEmoji(item.platform)}</div>'">`
+      : `<div class="sug-ico">${platEmoji(item.platform)}</div>`;
+    d.innerHTML = `${thumb}<div class="sug-info"><div class="sug-name">${esc(item.name)}</div><div class="sug-meta">${item.year ? item.year + ' · ' : ''}${esc(item.platform)}</div></div><span class="sug-badge">${esc(item.platform)}</span>`;
+    d.onclick = () => selectProduct(item);
+    c.appendChild(d);
+  });
+}
+
+function showDrop() { document.getElementById('search-drop').style.display = 'block'; }
+function hideDrop() { document.getElementById('search-drop').style.display = 'none'; }
+document.addEventListener('click', e => { if (!document.getElementById('search-outer').contains(e.target)) hideDrop(); });
+
+// ═══ SELECCIONAR PRODUCTO ═══
+function selectProduct(prod) {
+  S.product = prod;
+  hideDrop();
+  document.getElementById('search-inp').value = prod.name;
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
+  renderProdHeader(prod);
+  ['ref-prices','sold-prices','live-prices','consensus'].forEach(id => {
+    document.getElementById(id).innerHTML = '<div class="loading-row"><span class="dot"></span><span class="dot"></span><span class="dot"></span> Buscando precios...</div>';
+  });
+  document.getElementById('cta-row').innerHTML = '';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+  setTimeout(() => loadDemoPrices(prod), 900);
+}
+
+function renderProdHeader(prod) {
+  const el = document.getElementById('prod-header');
+  el.innerHTML = `
+    <div class="prod-ico" id="prod-ico">${platEmoji(prod.platform)}</div>
+    <div>
+      <div class="prod-name">${esc(prod.name)}</div>
+      <div class="prod-tags">
+        <span class="ptag">${esc(prod.platform || '—')}</span>
+        ${prod.year ? `<span class="ptag">${prod.year}</span>` : ''}
+        <span class="ptag ptag-red">🇯🇵 Japón disponible</span>
+      </div>
+    </div>
+    <div class="prod-actions">
+      <button class="btn-ghost" onclick="quickWishlist()">⭐ Wishlist</button>
+    </div>`;
+  if (prod.img) {
+    const i = new Image();
+    i.onload = () => {
+      const ph = document.getElementById('prod-ico');
+      if (ph) { const img = document.createElement('img'); img.className = 'prod-img'; img.src = prod.img; img.alt = prod.name; ph.replaceWith(img); }
+    };
+    i.src = prod.img;
+  }
+}
+
+function loadDemoPrices(prod) {
+  const n = prod.name.toLowerCase();
+  let base = 20;
+  if (n.includes('chrono')) base = 140;
+  else if (n.includes('zelda') || n.includes('ocarina')) base = 62;
+  else if (n.includes('mario 64') || n.includes('super mario 64')) base = 30;
+  else if (n.includes('castlevania') || n.includes('sotn') || n.includes('symphony')) base = 52;
+  else if (n.includes('earthbound')) base = 175;
+  else if (n.includes('final fantasy')) base = 22;
+  else if (n.includes('metal gear')) base = 18;
+  else if (n.includes('dragon ball')) base = 28;
+  else if (n.includes('pokemon') || n.includes('pokémon')) base = 35;
+  else if (prod.type === 'figure') base = 45;
+  else if (prod.type === 'console') base = 85;
+
+  // Consenso
+  document.getElementById('consensus').innerHTML = `
+    <div>
+      <div class="con-label">🎯 Precio consenso de mercado</div>
+      <div class="con-price">$${fmt(base * 1.05)}</div>
+      <div class="con-range">Rango: $${fmt(base * 0.72)} — $${fmt(base * 1.55)} USD</div>
+    </div>
+    <div class="con-sample">12 ventas analizadas</div>`;
+
+  // Referencia
+  const loose = base * 0.85, complete = base * 1.0, newPrice = base * 3.2;
+  document.getElementById('ref-prices').innerHTML = `
+    <a class="ref-row" href="https://www.pricecharting.com" target="_blank" rel="noopener">
+      <div class="ref-source"><span class="ref-flag">🇺🇸</span><div><div class="ref-name">PriceCharting</div><div class="ref-region">Global · USD</div></div></div>
+      <div class="ref-conds">
+        <div><div class="ref-cond-label">Solo cartucho</div><div class="ref-cond-val">$${fmt(loose)}</div></div>
+        <div><div class="ref-cond-label">Completo (CIB)</div><div class="ref-cond-val">$${fmt(complete)}</div></div>
+        <div><div class="ref-cond-label">Nuevo sellado</div><div class="ref-cond-val">$${fmt(newPrice)}</div></div>
+        <div><div class="ref-cond-label">Gradado (PSA/CGC)</div><div class="ref-cond-val">$${fmt(base * 8)}</div></div>
+      </div>
+      <span class="ref-arrow">↗</span>
+    </a>
+    <a class="ref-row" href="https://www.gamevaluenow.com" target="_blank" rel="noopener">
+      <div class="ref-source"><span class="ref-flag">🇺🇸</span><div><div class="ref-name">GameValueNow</div><div class="ref-region">Global · USD</div></div></div>
+      <div class="ref-conds">
+        <div><div class="ref-cond-label">Solo cartucho</div><div class="ref-cond-val">$${fmt(loose * 0.95)}</div></div>
+        <div><div class="ref-cond-label">Completo (CIB)</div><div class="ref-cond-val">$${fmt(complete * 1.03)}</div></div>
+        <div><div class="ref-cond-label">Nuevo sellado</div><div class="ref-cond-val">$${fmt(newPrice * 0.98)}</div></div>
+      </div>
+      <span class="ref-arrow">↗</span>
+    </a>`;
+
+  // Ventas cerradas
+  const soldItems = [
+    {badge:'b-ebay',label:'eBay',title:`${prod.name} — CIB Complete In Box`,price:base*1.1,cur:'USD',type:'Compra directa',date:daysAgo(3)},
+    {badge:'b-auction',label:'Subasta eBay',title:`${prod.name} — Loose Cart`,price:base*0.82,cur:'USD',type:'Subasta finalizada',date:daysAgo(7)},
+    {badge:'b-mercari',label:'Mercari JP',title:`${prod.name} 箱付き美品`,price:Math.round(base*148),cur:'JPY',type:'Como nuevo',date:daysAgo(5)},
+    {badge:'b-goldin',label:'Goldin',title:`${prod.name} — Graded PSA 9`,price:base*6.5,cur:'USD',type:'Subasta finalizada',date:daysAgo(12)},
+    {badge:'b-ml',label:'Mercado Libre',title:`${prod.name} original completo`,price:base*1.05,cur:'USD',type:'Usado',date:daysAgo(10)},
+    {badge:'b-auction',label:'Subasta eBay',title:`${prod.name} — CIB Tested`,price:base*1.22,cur:'USD',type:'Subasta finalizada',date:daysAgo(22)},
+    {badge:'b-mercari',label:'Mercari JP',title:`${prod.name} ソフトのみ`,price:Math.round(base*95),cur:'JPY',type:'Buen estado',date:daysAgo(18)},
+    {badge:'b-ebay',label:'eBay',title:`${prod.name} — VG condition`,price:base*0.68,cur:'USD',type:'Compra directa',date:daysAgo(30)},
+  ];
+  renderListings('sold-prices', soldItems);
+
+  // En venta ahora
+  const liveItems = [
+    {badge:'b-ebay',label:'eBay',title:`${prod.name} — CIB Complete In Box`,price:base*1.35,cur:'USD',type:'Como nuevo',date:null},
+    {badge:'b-mercari',label:'Mercari JP',title:`${prod.name} 新品同様`,price:Math.round(base*165),cur:'JPY',type:'Como nuevo',date:null},
+    {badge:'b-ml',label:'Mercado Libre',title:`${prod.name} completo con manual`,price:base*1.15,cur:'USD',type:'Muy buen estado',date:null},
+    {badge:'b-wallapop',label:'Wallapop',title:`${prod.name} perfecto estado`,price:base*1.1,cur:'USD',type:'Buen estado',date:null},
+    {badge:'b-ebay',label:'eBay',title:`${prod.name} — versión japonesa NTSC-J`,price:base*0.92,cur:'USD',type:'Usado',date:null},
+    {badge:'b-mercari',label:'Mercari JP',title:`${prod.name} セット品`,price:Math.round(base*130),cur:'JPY',type:'Buen estado',date:null},
+  ];
+  renderListings('live-prices', liveItems);
+
+  // CTAs
+  document.getElementById('cta-row').innerHTML = `
+    <button class="cta cta-red" onclick="openAddCollectionWithProd()">📦 Añadir a mi colección</button>
+    <button class="cta cta-out" onclick="quickWishlist()">⭐ Añadir a wishlist</button>`;
+}
+
+function renderListings(containerId, items) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  items.slice(0, 3).forEach(item => el.appendChild(buildListing(item)));
+  if (items.length > 3) {
+    const btn = document.createElement('button');
+    btn.className = 'show-more';
+    btn.textContent = `Ver ${items.length - 3} ventas más`;
+    btn.onclick = () => { items.slice(3).forEach(i => el.insertBefore(buildListing(i), btn)); btn.remove(); };
+    el.appendChild(btn);
+  }
+}
+
+function buildListing(item) {
+  const a = document.createElement('a');
+  a.className = 'listing'; a.href = '#'; a.target = '_blank';
+  a.style.textDecoration = 'none';
+  let priceHtml = '';
+  if (item.cur === 'JPY') {
+    priceHtml = `<span class="l-price">¥${item.price.toLocaleString()}</span><span class="l-jpy">~$${fmt(item.price * JPY)}</span>`;
+  } else {
+    priceHtml = `<span class="l-price">$${fmt(item.price)}</span>`;
+  }
+  a.innerHTML = `
+    <span class="l-badge ${item.badge}">${item.label}</span>
+    <span class="l-title">${esc(item.title)}</span>
+    ${item.type ? `<span class="l-cond">${esc(item.type)}</span>` : ''}
+    ${priceHtml}
+    ${item.date ? `<span class="l-date">${item.date}</span>` : ''}`;
+  return a;
+}
+
+function daysAgo(d) {
+  if (d < 1) return 'Hoy';
+  if (d === 1) return 'Ayer';
+  if (d < 7) return `Hace ${d}d`;
+  if (d < 30) return `Hace ${Math.floor(d/7)}sem`;
+  return `Hace ${Math.floor(d/30)}mes`;
+}
+
+// ═══ PORTFOLIO ═══
+function renderPortfolio(filterType) {
+  filterType = filterType || S.portfolioFilter || 'all';
+  S.portfolioFilter = filterType;
+  const allItems = S.portfolio.items;
+  const items = filterType === 'all' ? allItems : allItems.filter(i => i.type === filterType);
+
+  // Stats — solo sobre todos los ítems
+  const total = allItems.reduce((s,i) => s + (i.currentPrice || 0), 0);
+  document.getElementById('s-total').textContent = '$' + fmt(total);
+  document.getElementById('s-count').textContent = allItems.length;
+
+  // Tendencia simulada
+  const trendPct = allItems.length > 0 ? '+3.2%' : '—';
+  const trendEl = document.getElementById('s-trend');
+  trendEl.textContent = allItems.length > 0 ? '▲ ' + trendPct + ' este mes' : '—';
+  trendEl.className = 'stat-ch up';
+
+  // Ítem más valioso
+  const topItem = allItems.reduce((best, i) => (!best || (i.currentPrice||0) > (best.currentPrice||0)) ? i : best, null);
+  document.getElementById('s-top').textContent = topItem ? topItem.name : '—';
+  document.getElementById('s-top-price').textContent = topItem ? '$' + fmt(topItem.currentPrice || 0) : '—';
+
+  const grid = document.getElementById('portfolio-grid');
+  grid.innerHTML = '';
+
+  if (allItems.length === 0) {
+    const t = document.createElement('div'); t.className = 'add-tile'; t.onclick = openAddCollection;
+    t.innerHTML = '<div class="plus">+</div><span>Añade tu primer ítem</span>'; grid.appendChild(t); return;
+  }
+
+  if (items.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text2)"><div style="font-size:2rem;margin-bottom:.8rem">📭</div><div style="font-weight:700">Sin ítems en esta categoría</div></div>`;
+  } else {
+    items.forEach((item, i) => {
+      const card = document.createElement('div');
+      card.className = 'icard'; card.style.animationDelay = i * 0.05 + 's';
+      const trendOpts = ['up','down','flat'], tl = {up:'+5.2%',down:'-2.1%',flat:'0%'};
+      const tr = trendOpts[Math.floor(Math.random() * 3)];
+      const cl = {loose:'Suelto',complete:'Completo',new:'Nuevo'};
+      card.innerHTML = `
+        <div class="icard-thumb"><span>${platEmoji(item.platform)}</span><div class="trend-b tb-${tr}">${tl[tr]}</div></div>
+        <div class="icard-info">
+          <div class="icard-name">${esc(item.name)}</div>
+          <div class="icard-plat">${esc(item.platform || '')}</div>
+          <div class="icard-bot">
+            <span class="icard-price">$${fmt(item.currentPrice || item.purchasePrice || 0)}</span>
+            <span class="icard-cond">${cl[item.condition] || item.condition}</span>
+          </div>
+        </div>`;
+      card.onclick = () => { goPage('valorador'); document.getElementById('search-inp').value = item.name; selectProduct(item); };
+      grid.appendChild(card);
+    });
+  }
+
+  const addT = document.createElement('div'); addT.className = 'add-tile'; addT.onclick = openAddCollection;
+  addT.innerHTML = '<div class="plus">+</div><span>Añadir ítem</span>'; grid.appendChild(addT);
+}
+
+function filterPortfolio(type, btn) {
+  document.querySelectorAll('#page-portfolio .ftab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPortfolio(type);
+}
+function sortPortfolio(v) {
+  const items = S.portfolio.items;
+  if (v === 'value-desc') items.sort((a,b) => (b.currentPrice||0) - (a.currentPrice||0));
+  if (v === 'value-asc') items.sort((a,b) => (a.currentPrice||0) - (b.currentPrice||0));
+  if (v === 'date') items.sort((a,b) => new Date(b.addedAt) - new Date(a.addedAt));
+  renderPortfolio();
+}
+
+// ═══ WISHLIST ═══
+function renderWishlist() {
+  const items = S.portfolio.wishlist;
+  const grid = document.getElementById('wishlist-grid');
+  grid.innerHTML = '';
+  if (!items.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text2)"><div style="font-size:2.2rem;margin-bottom:.8rem">⭐</div><div style="font-weight:700;margin-bottom:.3rem">Tu wishlist está vacía</div><div style="font-size:.8rem">Busca un producto y añádelo para recibir alertas de precio</div></div>';
+    return;
+  }
+  items.forEach(item => {
+    const demoPrice = getDemoPrice(item.name);
+    const card = document.createElement('div'); card.className = 'wcard';
+    card.innerHTML = `
+      <div class="wcard-top">
+        <div class="wcard-ico">${platEmoji(item.platform)}</div>
+        <div><div class="wcard-title">${esc(item.name)}</div><div class="wcard-plat">${esc(item.platform || '')}</div></div>
+      </div>
+      <div class="wcard-price-row">
+        <div class="wcard-price">~$${fmt(demoPrice)}</div>
+        <div class="wcard-target">Precio aprox. de mercado</div>
+      </div>
+      <svg class="mini-chart" viewBox="0 0 200 36"><path d="${miniChartPath()}" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <div class="wcard-actions">
+        <button class="wa wa-buy" onclick="event.stopPropagation();goPage('valorador');document.getElementById('search-inp').value='${esc(item.name)}';selectProduct({name:'${esc(item.name)}',platform:'${esc(item.platform||'')}',type:'${item.type||'game'}',id:'${item.id}'})">🔍 Ver precios</button>
+        <button class="wa wa-alert" onclick="event.stopPropagation();openModal('prem-modal')">🔔 Activar alerta</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+function getDemoPrice(name) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('chrono')) return 144;
+  if (n.includes('zelda') || n.includes('ocarina')) return 62;
+  if (n.includes('earthbound')) return 175;
+  if (n.includes('mario 64') || n.includes('super mario 64')) return 30;
+  if (n.includes('castlevania') || n.includes('symphony')) return 52;
+  if (n.includes('final fantasy')) return 22;
+  if (n.includes('dragon ball')) return 28;
+  if (n.includes('pokemon') || n.includes('pokémon')) return 35;
+  if (n.includes('metal gear')) return 18;
+  if (n.includes('sonic')) return 15;
+  if (n.includes('figura') || n.includes('figuarts') || n.includes('nendoroid') || n.includes('ichiban')) return 55;
+  return 25;
+}
+
+function miniChartPath() {
+  const pts = Array.from({length:10},(_,i) => ({x:i*22,y:8+Math.random()*22}));
+  return pts.map((p,i) => `${i===0?'M':'L'}${p.x},${p.y}`).join(' ');
+}
+
+// ═══ DASHBOARD ═══
+function renderDashboard() { renderChart(); renderCollBreakdown(); renderMarketMovers(); renderJapanOpps(); renderAlerts(); renderMovers(); }
+function renderChart() {
+  // Usar valor real de la colección
+  const realTotal = S.portfolio.items.reduce((s,i) => s + (i.currentPrice || 0), 0);
+  const baseVal = realTotal > 0 ? realTotal : 0;
+
+  const canvas = document.getElementById('chart-canvas');
+  const W = canvas.offsetWidth || 580; const H = 120;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const days = {'1m':30,'3m':90,'6m':180,'1y':365}[S.chartRange] || 30;
+
+  // Simular historial partiendo del valor real actual
+  const data = [];
+  let val = Math.max(baseVal * 0.85, 10);
+  for (let i=0;i<days;i++) { val += (Math.random()-.44)*(baseVal*0.02+1); val=Math.max(1,val); data.push(Math.round(val*100)/100); }
+  // Aseguramos que el último valor sea el real
+  data[data.length-1] = baseVal;
+
+  const mn = Math.min(...data), mx = Math.max(...data);
+  const last = baseVal;
+  const first = data[0];
+
+  document.getElementById('chart-val').textContent = '$' + fmt(last);
+  const diff = last - first;
+  document.getElementById('chart-ch').textContent = (diff>=0?'▲ +':'▼ ') + '$' + fmt(Math.abs(diff)) + ' este período';
+  document.getElementById('chart-ch').className = 'chart-ch ' + (diff>=0?'up':'down');
+
+  if (baseVal === 0) {
+    document.getElementById('chart-val').textContent = '$0';
+    document.getElementById('chart-ch').textContent = 'Añade ítems a tu colección para ver la gráfica';
+    document.getElementById('chart-ch').className = 'chart-ch flat';
+    ctx.clearRect(0,0,W,H); return;
+  }
+
+  ctx.clearRect(0,0,W,H);
+  const tx = i => (i/(data.length-1))*W;
+  const ty = v => H - ((v-mn)/(mx-mn+0.01))*(H-16)-8;
+  const grad = ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'rgba(232,0,61,.16)'); grad.addColorStop(1,'rgba(232,0,61,0)');
+  ctx.beginPath(); ctx.moveTo(tx(0),ty(data[0]));
+  data.forEach((v,i) => { if(i>0) ctx.lineTo(tx(i),ty(v)); });
+  ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(tx(0),ty(data[0]));
+  data.forEach((v,i) => { if(i>0) ctx.lineTo(tx(i),ty(v)); });
+  ctx.strokeStyle='var(--red)'; ctx.lineWidth=2; ctx.stroke();
+}
+function setRange(r, btn) {
+  S.chartRange = r;
+  document.querySelectorAll('.ttab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); renderChart();
+}
+function renderMovers() {
+  const movers = [
+    {rank:1,n:'Chrono Trigger',p:'SNES',price:'$144',ch:'+8.2%',up:true},
+    {rank:2,n:'Castlevania SOTN',p:'PS1',price:'$52',ch:'+5.7%',up:true},
+    {rank:3,n:'Earthbound',p:'SNES',price:'$175',ch:'+4.1%',up:true},
+    {rank:4,n:'Metal Gear Solid',p:'PS1',price:'$38',ch:'-1.8%',up:false},
+    {rank:5,n:'Final Fantasy VI',p:'SNES',price:'$89',ch:'+2.3%',up:true},
+  ];
+  document.getElementById('top-movers').innerHTML = movers.map(m => `
+    <div class="mover-row">
+      <span class="mover-rank ${m.rank===1?'gold':''}">${m.rank}</span>
+      <div class="mover-info"><div class="mover-n">${m.n}</div><div class="mover-p">${m.p}</div></div>
+      <div class="mover-right"><div class="mover-price">${m.price}</div><div class="mover-ch ${m.up?'up':'down'}">${m.ch}</div></div>
+    </div>`).join('');
+}
+function renderCollBreakdown() {
+  const items = S.portfolio.items;
+  const el = document.getElementById('coll-breakdown');
+  if (!el) return;
+
+  const cats = {game:{label:'Videojuegos',emoji:'🎮',val:0},console:{label:'Consolas',emoji:'🕹️',val:0},figure:{label:'Figuras',emoji:'🗿',val:0}};
+  items.forEach(i => { const t = i.type || 'game'; if (cats[t]) cats[t].val += (i.currentPrice||0); });
+  const total = items.reduce((s,i) => s + (i.currentPrice||0), 0);
+
+  if (items.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted2);font-size:.78rem">Añade ítems a tu colección</div>';
+    return;
+  }
+
+  el.innerHTML = Object.values(cats).map(c => {
+    const pct = total > 0 ? Math.round((c.val/total)*100) : 0;
+    return `
+      <div style="margin-bottom:.9rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem">
+          <span style="font-size:.78rem;font-weight:700">${c.emoji} ${c.label}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:.78rem;font-weight:700">$${fmt(c.val)} <span style="color:var(--muted2);font-weight:400">${pct}%</span></span>
+        </div>
+        <div style="height:6px;background:var(--surface3);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:var(--red);border-radius:3px;transition:width .4s ease"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderMarketMovers() {
+  const up = [
+    {n:'Chrono Trigger',p:'Super Nintendo',ch:'+8.2%',price:'$144'},
+    {n:'Castlevania: SOTN',p:'PlayStation',ch:'+5.7%',price:'$52'},
+    {n:'Earthbound',p:'Super Nintendo',ch:'+4.1%',price:'$175'},
+    {n:'Street Fighter II',p:'Super Nintendo',ch:'+3.8%',price:'$38'},
+    {n:'Mega Man X',p:'Super Nintendo',ch:'+2.9%',price:'$45'},
+  ];
+  const down = [
+    {n:'Final Fantasy VIII',p:'PlayStation',ch:'-3.2%',price:'$18'},
+    {n:'Tekken 3',p:'PlayStation',ch:'-2.8%',price:'$12'},
+    {n:'Sonic Adventure 2',p:'Dreamcast',ch:'-2.1%',price:'$28'},
+    {n:'Dragon Ball Z Budokai',p:'PlayStation 2',ch:'-1.9%',price:'$22'},
+    {n:'Spyro the Dragon',p:'PlayStation',ch:'-1.4%',price:'$14'},
+  ];
+
+  const elUp = document.getElementById('market-up');
+  const elDown = document.getElementById('market-down');
+  if (!elUp || !elDown) return;
+
+  const rowHtml = (items, cls) => items.map(m => `
+    <div class="mover-row">
+      <div class="mover-info"><div class="mover-n">${m.n}</div><div class="mover-p">${m.p}</div></div>
+      <div class="mover-right"><div class="mover-price">${m.price}</div><div class="mover-ch ${cls}">${m.ch}</div></div>
+    </div>`).join('');
+
+  elUp.innerHTML = rowHtml(up, 'up');
+  elDown.innerHTML = rowHtml(down, 'down');
+}
+
+function renderJapanOpps() {
+  const el = document.getElementById('japan-opps');
+  if (!el) return;
+  const opps = [
+    {n:'Chrono Trigger',p:'Super Nintendo',jpyPrice:'¥9.800',usdJP:'~$66',usdUS:'$144',diff:'-54%'},
+    {n:'Final Fantasy VII',p:'PlayStation · JPN',jpyPrice:'¥2.200',usdJP:'~$15',usdUS:'$22',diff:'-32%'},
+    {n:'Dragon Ball Z Hyper Dimension',p:'Super Nintendo · JPN',jpyPrice:'¥3.500',usdJP:'~$23',usdUS:'$38',diff:'-39%'},
+    {n:'Mega Man X',p:'Super Nintendo · JPN',jpyPrice:'¥2.800',usdJP:'~$19',usdUS:'$45',diff:'-58%'},
+    {n:'Castlevania: SOTN',p:'PlayStation · JPN',jpyPrice:'¥5.500',usdJP:'~$37',usdUS:'$52',diff:'-29%'},
+  ];
+  el.innerHTML = opps.map(o => `
+    <div class="listing" style="cursor:pointer" onclick="window.open('https://jp.mercari.com/search?keyword=${encodeURIComponent(o.n)}','_blank')">
+      <span class="l-badge b-mercari">Mercari JP</span>
+      <span class="l-title">${o.n} <span style="color:var(--muted2)">${o.p}</span></span>
+      <span class="l-price">${o.jpyPrice}</span>
+      <span class="l-jpy">${o.usdJP}</span>
+      <span style="font-size:.68rem;font-weight:800;color:var(--green);flex-shrink:0">${o.diff} vs USA</span>
+    </div>`).join('');
+}
+
+function renderAlerts() {
+  const alerts = [
+    {ico:'🔥',body:'<strong>Chrono Trigger SNES</strong> sube un 8.2% esta semana — precio medio actual $144',ts:'Hace 3 horas'},
+    {ico:'🇯🇵',body:'<strong>Mega Man X</strong> aparece en Mercari JP por ¥2.800 (~$19) — un 58% más barato que en USA',ts:'Hace 5 horas'},
+    {ico:'📈',body:'<strong>Earthbound SNES</strong> marca máximo histórico en eBay — $175 en última subasta',ts:'Ayer'},
+    {ico:'💡',body:'<strong>Dragon Ball Z Hyper Dimension</strong> — versión japonesa un 39% más barata en Japón esta semana',ts:'Hace 2 días'},
+  ];
+  document.getElementById('alerts-list').innerHTML = alerts.map(a => `
+    <div class="alert-row">
+      <span class="alert-ico">${a.ico}</span>
+      <div class="alert-body"><div>${a.body}</div><div class="alert-ts">${a.ts}</div></div>
+      <button class="alert-btn">Ver →</button>
+    </div>`).join('');
+}
+// renderTrends reemplazado por renderMarketMovers y renderJapanOpps
+
+// ═══ MODALES ═══
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeOutside(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') ['login-modal','add-modal','prem-modal'].forEach(closeModal); });
+
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim() || 'demo@japangemu.com';
+  S.userId = 'u_' + btoa(email).slice(0,8);
+  localStorage.setItem('jg_uid', S.userId);
+  closeModal('login-modal');
+  const ini = email[0].toUpperCase();
+  const sh = email.length > 15 ? email.slice(0,13) + '…' : email;
+  document.getElementById('account-area').innerHTML = `
+    <div style="position:relative" id="av-wrap">
+      <button onclick="toggleDrop(event)" style="display:flex;align-items:center;gap:.5rem;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:.3rem .7rem;cursor:pointer;color:var(--text);font-family:Syne,sans-serif;font-size:.75rem;font-weight:700">
+        <div style="width:23px;height:23px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff">${ini}</div>
+        ${sh}<span style="color:var(--muted2);font-size:.65rem">▾</span>
+      </button>
+      <div id="av-drop" style="display:none;position:absolute;right:0;top:calc(100% + 5px);background:var(--surface);border:1px solid var(--border2);border-radius:13px;min-width:175px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,.4);z-index:400">
+        <div style="padding:.7rem 1rem;border-bottom:1px solid var(--border);font-size:.68rem;color:var(--muted2)">${email}</div>
+        <button onclick="goPage('portfolio');closeAv()" style="width:100%;text-align:left;padding:.6rem 1rem;background:none;border:none;color:var(--text);font-family:Syne,sans-serif;font-size:.78rem;font-weight:700;cursor:pointer">📦 Mi Colección</button>
+        <button onclick="goPage('wishlist');closeAv()" style="width:100%;text-align:left;padding:.6rem 1rem;background:none;border:none;color:var(--text);font-family:Syne,sans-serif;font-size:.78rem;font-weight:700;cursor:pointer">⭐ Wishlist</button>
+        <button onclick="doLogout()" style="width:100%;text-align:left;padding:.6rem 1rem;background:none;border:none;color:var(--red);font-family:Syne,sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;border-top:1px solid var(--border)">Cerrar sesión</button>
+      </div>
+    </div>`;
+  toast('✅ Sesión iniciada');
+}
+function toggleDrop(e) { e.stopPropagation(); const d = document.getElementById('av-drop'); d.style.display = d.style.display === 'none' ? 'block' : 'none'; }
+function closeAv() { const d = document.getElementById('av-drop'); if(d) d.style.display = 'none'; }
+document.addEventListener('click', e => { const w = document.getElementById('av-wrap'); if (w && !w.contains(e.target)) closeAv(); });
+function doLogout() {
+  S.userId = null; localStorage.removeItem('jg_uid');
+  document.getElementById('account-area').innerHTML = '<button class="btn-primary" onclick="openModal(\'login-modal\')">Entrar</button>';
+  toast('Sesión cerrada');
+}
+
+// ═══ AÑADIR COLECCIÓN ═══
+function openAddCollection() { if (!S.userId) { openModal('login-modal'); return; } S.addProd = null; document.getElementById('add-search-inp').value = ''; document.getElementById('add-search-res').innerHTML = ''; document.getElementById('add-selected').style.display = 'none'; openModal('add-modal'); setTimeout(() => document.getElementById('add-search-inp').focus(), 220); }
+function openAddCollectionWithProd() { if (!S.userId) { openModal('login-modal'); return; } if (S.product) { S.addProd = S.product; document.getElementById('add-search-inp').value = S.product.name; showSelProd(S.product); } openModal('add-modal'); }
+let _mst;
+function onModalSearch(v) {
+  clearTimeout(_mst); if (!v || v.length < 2) { document.getElementById('add-search-res').innerHTML = ''; return; }
+  _mst = setTimeout(() => {
+    const res = getDemoResults(v, 'all').slice(0,6);
+    const c = document.getElementById('add-search-res'); c.innerHTML = '';
+    res.forEach(item => {
+      const d = document.createElement('div'); d.className = 'sug-item';
+      d.innerHTML = `<div class="sug-ico">${platEmoji(item.platform)}</div><div class="sug-info"><div class="sug-name">${esc(item.name)}</div><div class="sug-meta">${esc(item.platform)}</div></div>`;
+      d.onclick = () => { S.addProd = item; document.getElementById('add-search-inp').value = item.name; document.getElementById('add-search-res').innerHTML = ''; showSelProd(item); };
+      c.appendChild(d);
+    });
+  }, 220);
+}
+function showSelProd(prod) {
+  document.getElementById('sel-prod-display').innerHTML = `<div style="font-size:1.5rem">${platEmoji(prod.platform)}</div><div><div class="sel-prod-name">${esc(prod.name)}</div><div class="sel-prod-meta">${esc(prod.platform||'')}</div></div>`;
+  document.getElementById('add-selected').style.display = 'block';
+}
+function setCond(c, btn) { S.cond = c; document.querySelectorAll('.ctab').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+function confirmAdd() {
+  if (!S.addProd) { toast('⚠️ Selecciona un producto primero', true); return; }
+  const pp = parseFloat(document.getElementById('add-price').value) || null;
+  const item = { id: Date.now().toString(), productId: S.addProd.id, name: S.addProd.name, platform: S.addProd.platform || '', condition: S.cond, purchasePrice: pp, currentPrice: pp ? pp * 1.08 : 25, type: S.addProd.type || 'game', addedAt: new Date().toISOString() };
+  S.portfolio.items.push(item);
+  localStorage.setItem('jg_port', JSON.stringify(S.portfolio));
+  closeModal('add-modal');
+  toast('✅ ' + S.addProd.name + ' añadido a tu colección');
+}
+
+function quickWishlist() {
+  if (!S.userId) { openModal('login-modal'); return; }
+  if (!S.product) return;
+  const tp = prompt(`Precio objetivo para "${S.product.name}" (USD, deja vacío para cualquier precio)`);
+  const item = { id: Date.now().toString(), name: S.product.name, platform: S.product.platform || '', targetPrice: tp ? parseFloat(tp) : null, currentPrice: null, type: S.product.type || 'game', addedAt: new Date().toISOString() };
+  S.portfolio.wishlist.push(item);
+  localStorage.setItem('jg_port', JSON.stringify(S.portfolio));
+  toast('⭐ ' + S.product.name + ' añadido a wishlist');
+}
+function openAddWishlist() { if (!S.userId) { openModal('login-modal'); return; } quickWishlist(); }
+
+// ═══ TEMA ═══
+function toggleTheme() {
+  const dark = !document.body.classList.contains('light');
+  document.body.classList.toggle('light', dark);
+  document.querySelector('[onclick="toggleTheme()"]').textContent = dark ? '☀️' : '🌙';
+  localStorage.setItem('jg_theme', dark ? 'light' : 'dark');
+}
+
+// ═══ UTILS ═══
+function fmt(n) { if(n===null||n===undefined) return '—'; return Number(n).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function esc(s) { if(!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function toast(msg, err=false) {
+  const t = document.getElementById('jg-toast');
+  if (t) t.remove();
+  const el = document.createElement('div'); el.id = 'jg-toast'; el.textContent = msg;
+  Object.assign(el.style,{position:'fixed',bottom:'2rem',left:'50%',transform:'translateX(-50%)',background:err?'var(--red)':'var(--surface)',border:'1px solid var(--border2)',color:'var(--text)',padding:'.7rem 1.3rem',borderRadius:'11px',fontFamily:'Syne,sans-serif',fontSize:'.83rem',fontWeight:'700',zIndex:'1000',boxShadow:'0 8px 30px rgba(0,0,0,.4)',animation:'fadeIn .2s ease',whiteSpace:'nowrap'});
+  document.body.appendChild(el); setTimeout(() => el.remove(), 3000);
+}
+
+// INIT
+(function() {
+  const t = localStorage.getItem('jg_theme');
+  if (t === 'light') { document.body.classList.add('light'); document.querySelector('[onclick="toggleTheme()"]').textContent = '☀️'; }
+  if (S.userId) document.getElementById('account-area').innerHTML = '<button class="btn-primary" onclick="doLogout()">Salir</button>';
+  renderPortfolio();
+})();
+</script>
+</body>
+</html>
