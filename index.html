@@ -83,6 +83,13 @@ body.light nav{background:rgba(245,245,248,0.95)}
 .sug-name{font-weight:700;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sug-meta{font-size:.68rem;color:var(--text2);margin-top:.06rem}
 .sug-badge{font-size:.6rem;font-weight:700;padding:.13rem .38rem;border-radius:4px;background:var(--surface3);color:var(--muted2);flex-shrink:0;white-space:nowrap}
+.reg-badge{font-size:.58rem;font-weight:800;padding:.12rem .4rem;border-radius:4px;border:1px solid;flex-shrink:0;white-space:nowrap;letter-spacing:.2px}
+.reg-jp{background:rgba(210,0,0,.09);border-color:rgba(210,0,0,.25);color:#bb1100}
+.reg-us{background:rgba(30,60,180,.08);border-color:rgba(30,60,180,.22);color:#1a3acc}
+.reg-eu{background:rgba(0,100,200,.08);border-color:rgba(0,100,200,.22);color:#0055bb}
+.ptag-jp{background:rgba(210,0,0,.09)!important;border-color:rgba(210,0,0,.25)!important;color:#bb1100!important}
+.ptag-us{background:rgba(30,60,180,.08)!important;border-color:rgba(30,60,180,.22)!important;color:#1a3acc!important}
+.ptag-eu{background:rgba(0,100,200,.08)!important;border-color:rgba(0,100,200,.22)!important;color:#0055bb!important}
 .sug-loading{padding:1.1rem;text-align:center;color:var(--muted2);font-size:.78rem;display:flex;align-items:center;justify-content:center;gap:.5rem}
 
 /* EMPTY STATE */
@@ -781,13 +788,19 @@ function getLocalResults(q) {
     {id:'igdb:9168',name:'Street Fighter II',platform:'Super Nintendo',type:'game',year:1992,img:null},
     {id:'igdb:7334',name:'Donkey Kong Country 2',platform:'Super Nintendo',type:'game',year:1995,img:null},
     // PlayStation
-    {id:'igdb:7346',name:'Metal Gear Solid',platform:'PlayStation',type:'game',year:1998,img:'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wkb.jpg'},
-    {id:'igdb:113',name:'Final Fantasy VII',platform:'PlayStation',type:'game',year:1997,img:'https://images.igdb.com/igdb/image/upload/t_cover_big/co1x9q.jpg'},
-    {id:'igdb:2390',name:'Castlevania: Symphony of the Night',platform:'PlayStation',type:'game',year:1997,img:null},
+    {id:'igdb:7346',name:'Metal Gear Solid',platform:'PlayStation',type:'game',year:1998,region:'NTSC-U',img:'https://images.igdb.com/igdb/image/upload/t_cover_big/co3wkb.jpg'},
+    {id:'igdb:7346j',name:'Metal Gear Solid (メタルギアソリッド)',platform:'PlayStation',type:'game',year:1998,region:'NTSC-J',img:null},
+    {id:'igdb:113',name:'Final Fantasy VII',platform:'PlayStation',type:'game',year:1997,region:'NTSC-U',img:'https://images.igdb.com/igdb/image/upload/t_cover_big/co1x9q.jpg'},
+    {id:'igdb:113j',name:'Final Fantasy VII (ファイナルファンタジーVII)',platform:'PlayStation',type:'game',year:1997,region:'NTSC-J',img:null},
+    {id:'igdb:2390',name:'Castlevania: Symphony of the Night',platform:'PlayStation',type:'game',year:1997,region:'NTSC-U',img:null},
+    {id:'igdb:2390j',name:'Castlevania: Nocturne in the Moonlight (悪魔城ドラキュラX 月下の夜想曲)',platform:'PlayStation',type:'game',year:1997,region:'NTSC-J',img:null},
     {id:'igdb:1164',name:'Final Fantasy VIII',platform:'PlayStation',type:'game',year:1999,img:null},
     {id:'igdb:1165',name:'Final Fantasy IX',platform:'PlayStation',type:'game',year:2000,img:null},
     {id:'igdb:4386',name:'Crash Bandicoot',platform:'PlayStation',type:'game',year:1996,img:null},
-    {id:'igdb:7360',name:'Resident Evil 2',platform:'PlayStation',type:'game',year:1998,img:null},
+    {id:'igdb:7360',name:'Resident Evil 2',platform:'PlayStation',type:'game',year:1998,region:'NTSC-U',img:null},
+    {id:'igdb:7360j',name:'Biohazard 2 (バイオハザード2)',platform:'PlayStation',type:'game',year:1998,region:'NTSC-J',img:null},
+    {id:'igdb:re1us',name:'Resident Evil',platform:'PlayStation',type:'game',year:1996,region:'NTSC-U',img:null},
+    {id:'igdb:re1jp',name:'Biohazard (バイオハザード)',platform:'PlayStation',type:'game',year:1996,region:'NTSC-J',img:null},
     {id:'igdb:3776',name:'Tekken 3',platform:'PlayStation',type:'game',year:1997,img:null},
     {id:'igdb:5665',name:'Spyro the Dragon',platform:'PlayStation',type:'game',year:1998,img:null},
     {id:'igdb:1116',name:'Silent Hill',platform:'PlayStation',type:'game',year:1999,img:null},
@@ -833,14 +846,16 @@ function getLocalResults(q) {
     {id:'igdb:9012',name:'Castlevania: Aria of Sorrow',platform:'Game Boy Advance',type:'game',year:2003,img:null},
     {id:'igdb:9013',name:'Castlevania: Circle of the Moon',platform:'Game Boy Advance',type:'game',year:2001,img:null},
     {id:'igdb:9014',name:'Final Fantasy VI Advance',platform:'Game Boy Advance',type:'game',year:2006,img:null},
-    {id:'igdb:9015',name:'Mother 3',platform:'Game Boy Advance',type:'game',year:2006,img:null},
+    {id:'igdb:9015',name:'Mother 3 (マザー3)',platform:'Game Boy Advance',type:'game',year:2006,region:'NTSC-J',img:null},
+    {id:'igdb:9015us',name:'Earthbound 2 / Mother 3 (sin traducción oficial)',platform:'Game Boy Advance',type:'game',year:2006,region:'NTSC-J',img:null},
     {id:'igdb:9016',name:'Super Mario Advance 4',platform:'Game Boy Advance',type:'game',year:2003,img:null},
     {id:'igdb:9017',name:'Mario Kart: Super Circuit',platform:'Game Boy Advance',type:'game',year:2001,img:null},
     {id:'igdb:9018',name:'Fire Emblem',platform:'Game Boy Advance',type:'game',year:2003,img:null},
     {id:'igdb:9019',name:'Kirby: Nightmare in Dream Land',platform:'Game Boy Advance',type:'game',year:2002,img:null},
     {id:'igdb:9020',name:'Sonic Advance',platform:'Game Boy Advance',type:'game',year:2001,img:null},
-    {id:'igdb:9021',name:'Dragon Ball Z: Buu\'s Fury',platform:'Game Boy Advance',type:'game',year:2004,img:null},
-    {id:'igdb:9022',name:'Dragon Ball Z: Legacy of Goku II',platform:'Game Boy Advance',type:'game',year:2003,img:null},
+    {id:'igdb:9021',name:'Dragon Ball Z: Buu\'s Fury',platform:'Game Boy Advance',type:'game',year:2004,region:'NTSC-U',img:null},
+    {id:'igdb:9021j',name:'Dragon Ball Z: Bukū Tōgeki (ブクウ闘劇)',platform:'Game Boy Advance',type:'game',year:2004,region:'NTSC-J',img:null},
+    {id:'igdb:9022',name:'Dragon Ball Z: Legacy of Goku II',platform:'Game Boy Advance',type:'game',year:2003,region:'NTSC-U',img:null},
     // Consolas
     {id:'console:001',name:'Super Nintendo (SNES)',platform:'Consola',type:'console',year:1990,img:null},
     {id:'console:002',name:'Nintendo 64',platform:'Consola',type:'console',year:1996,img:null},
@@ -878,6 +893,14 @@ function getDemoResults(q, filter) {
   return getLocalResults(q).filter(i => filter === 'all' || i.type === filter);
 }
 
+function regBadgeHtml(region) {
+  if (!region) return '';
+  if (region === 'NTSC-J') return '<span class="reg-badge reg-jp">🇯🇵 JP</span>';
+  if (region === 'PAL')    return '<span class="reg-badge reg-eu">🇪🇺 EU</span>';
+  if (region === 'NTSC-U') return '<span class="reg-badge reg-us">🇺🇸 US</span>';
+  return '';
+}
+
 function renderSugs(items) {
   const c = document.getElementById('search-sugs');
   if (!items.length) { c.innerHTML = '<div class="sug-loading">Sin resultados</div>'; return; }
@@ -885,8 +908,25 @@ function renderSugs(items) {
   items.slice(0, 12).forEach(item => {
     const d = document.createElement('div');
     d.className = 'sug-item';
-    const thumb = `<div class="sug-ico" style="background:none;padding:2px">${platIcon(item.platform)}</div>`;
-    d.innerHTML = `${thumb}<div class="sug-info"><div class="sug-name">${esc(item.name)}</div><div class="sug-meta">${item.year ? item.year + ' · ' : ''}${esc(item.platform)}</div></div><span class="sug-badge">${esc(item.platform)}</span>`;
+    d.innerHTML = `
+      <div class="sug-ico" style="background:none;padding:2px" data-sug-ico></div>
+      <div class="sug-info">
+        <div class="sug-name">${esc(item.name)}</div>
+        <div class="sug-meta">${item.year ? item.year + ' · ' : ''}${esc(item.platform)}</div>
+      </div>
+      ${regBadgeHtml(item.region)}`;
+    // Icono placeholder inmediato
+    const ico = d.querySelector('[data-sug-ico]');
+    ico.innerHTML = platIcon(item.platform);
+    // Si hay imagen real, cargarla y reemplazar el placeholder
+    if (item.img) {
+      const img = new Image();
+      img.className = 'sug-img';
+      img.alt = item.name;
+      img.loading = 'lazy';
+      img.onload = () => { if (ico.parentNode) ico.replaceWith(img); };
+      img.src = item.img;
+    }
     d.onclick = () => selectProduct(item);
     c.appendChild(d);
   });
@@ -921,7 +961,10 @@ function renderProdHeader(prod) {
       <div class="prod-tags">
         <span class="ptag">${esc(prod.platform || '—')}</span>
         ${prod.year ? `<span class="ptag">${prod.year}</span>` : ''}
-        <span class="ptag ptag-red">🇯🇵 Japón disponible</span>
+        ${prod.region === 'NTSC-J' ? '<span class="ptag ptag-jp">🇯🇵 Versión japonesa</span>'
+          : prod.region === 'PAL'  ? '<span class="ptag ptag-eu">🇪🇺 Versión europea</span>'
+          : prod.region === 'NTSC-U' ? '<span class="ptag ptag-us">🇺🇸 Versión americana</span>'
+          : '<span class="ptag ptag-red">🇯🇵 Japón disponible</span>'}
       </div>
     </div>
     <div class="prod-actions">
