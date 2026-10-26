@@ -734,13 +734,21 @@ async function fetchSugs(q) {
   } catch(_) { /* timeout o CORS — ignorar, usar solo locales */ }
 
   // ── PASO 3: combinar y renderizar resultado final ─────────────────────────
-  const extras = localRes.filter(i => i.type !== 'game');
-  let combined = [...igdbResults, ...extras];
+  // Si IGDB devolvió juegos → combinar con locales no-juego
+  // Si IGDB no devolvió nada → usar todos los locales (incluyendo juegos)
+  let combined;
+  if (igdbResults.length > 0) {
+    const extras = localRes.filter(i => i.type !== 'game');
+    combined = [...igdbResults, ...extras];
+  } else {
+    combined = [...localRes];
+  }
+
   if (S.filter && S.filter !== 'all') {
     combined = combined.filter(i => {
-      if (S.filter === 'games')   return i.type === 'game';
+      if (S.filter === 'games')    return i.type === 'game';
       if (S.filter === 'consoles') return i.type === 'console';
-      if (S.filter === 'figures') return i.type === 'figure';
+      if (S.filter === 'figures')  return i.type === 'figure';
       return true;
     });
   }
