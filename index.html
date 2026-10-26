@@ -591,6 +591,11 @@ const S = {
   chartRange: '1m'
 };
 const JPY = 0.0067;
+// 🔑 RAWG: clave gratis en rawg.io/apidocs (2 min, sin tarjeta)
+// Con clave → imágenes en todos los juegos + catálogo de 800k+ títulos
+// Sin clave → solo catálogo local (sin imágenes externas)
+const RAWG_KEY = '';
+const _imgCache = new Map();
 
 // ═══ PLATAFORMAS ═══
 const PI = {
@@ -704,6 +709,39 @@ async function getIGDBToken() {
   }
 }
 
+// ── Helpers RAWG: enriquece ícono placeholder con imagen real ──────────────
+function rawgImg(icoEl, name, cls) {
+  if (!RAWG_KEY || !icoEl) return;
+  const cached = _imgCache.get(name);
+  if (cached !== undefined) { if (cached) _swapIco(icoEl, cached, name, cls); return; }
+  _imgCache.set(name, null); // mark pending — no lanzar fetch duplicado
+  fetch(`https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${encodeURIComponent(name)}&page_size=1`)
+    .then(r => r.ok ? r.json() : null)
+    .then(d => { const url = d?.results?.[0]?.background_image||null; _imgCache.set(name,url); if(url) _swapIco(icoEl,url,name,cls); })
+    .catch(()=>{});
+}
+function _swapIco(icoEl, src, alt, cls='sug-img') {
+  const img = new Image();
+  img.className = cls;
+  img.alt = alt;
+  img.onload = () => { if (icoEl.parentNode) icoEl.replaceWith(img); };
+  img.src = src;
+}
+function mapRawgPlatform(n) {
+  const m = {
+    'Super Nintendo Entertainment System (SNES)':'Super Nintendo',
+    'Nintendo Entertainment System (NES)':'NES',
+    'Sega Genesis':'Mega Drive',
+    'Sega Mega Drive/Genesis':'Mega Drive',
+    'Game Boy Advance':'Game Boy Advance',
+    'PlayStation 2':'PlayStation 2',
+    'PlayStation 3':'PlayStation 3',
+    'PlayStation 4':'PlayStation 4',
+    'PlayStation 5':'PlayStation 5',
+  };
+  return m[n] || n;
+}
+
 async function fetchSugs(q) {
   showDrop();
 
@@ -725,20 +763,39 @@ async function fetchSugs(q) {
       '<div class="sug-loading"><span class="dot"></span><span class="dot"></span><span class="dot"></span> Searching…</div>';
   }
 
-  // ── PASO 2: llamar al serverless (IGDB) con timeout de 5s ────────────────
+  // ── PASO 2: RAWG directo (sin servidor) o IGDB serverless como fallback ───
   let igdbResults = [];
   try {
     const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(`/api/igdb-search?q=${encodeURIComponent(q)}`, {
-      signal: controller.signal
-    });
+    const tid = setTimeout(() => controller.abort(), 6000);
+    let apiUrl, isRawg = false;
+    if (RAWG_KEY) {
+      // RAWG: CORS nativo, funciona directo desde el navegador
+      apiUrl = `https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${encodeURIComponent(q)}&page_size=10`;
+      isRawg = true;
+    } else {
+      // Fallback: IGDB serverless (requiere api/igdb-search.js en Vercel)
+      apiUrl = `/api/igdb-search?q=${encodeURIComponent(q)}`;
+    }
+    const res = await fetch(apiUrl, { signal: controller.signal });
     clearTimeout(tid);
     if (res.ok) {
       const data = await res.json();
-      igdbResults = Array.isArray(data.results) ? data.results : [];
+      if (isRawg && Array.isArray(data.results)) {
+        igdbResults = data.results.map(g => ({
+          id: `rawg:${g.id}`,
+          name: g.name,
+          platform: (g.platforms||[]).map(p => mapRawgPlatform(p.platform.name)).slice(0,2).join(' / ') || '—',
+          type: 'game',
+          year: g.released ? parseInt(g.released.substring(0,4)) : null,
+          img: g.background_image || null,
+          region: null
+        }));
+      } else {
+        igdbResults = Array.isArray(data.results) ? data.results : [];
+      }
     }
-  } catch(_) { /* timeout o CORS — ignorar, usar solo locales */ }
+  } catch(_) { /* timeout o error — usar solo locales */ }
 
   // ── PASO 3: combinar y renderizar resultado final ─────────────────────────
   // Si IGDB devolvió juegos → combinar con locales no-juego
@@ -918,14 +975,17 @@ function renderSugs(items) {
     // Icono placeholder inmediato
     const ico = d.querySelector('[data-sug-ico]');
     ico.innerHTML = platIcon(item.platform);
-    // Si hay imagen real, cargarla y reemplazar el placeholder
     if (item.img) {
+      // Imagen conocida → carga inmediata
       const img = new Image();
       img.className = 'sug-img';
       img.alt = item.name;
       img.loading = 'lazy';
       img.onload = () => { if (ico.parentNode) ico.replaceWith(img); };
       img.src = item.img;
+    } else if (item.type === 'game') {
+      // Sin imagen → enriquecer desde RAWG en background
+      rawgImg(ico, item.name);
     }
     d.onclick = () => selectProduct(item);
     c.appendChild(d);
@@ -964,7 +1024,7 @@ function renderProdHeader(prod) {
         ${prod.region === 'NTSC-J' ? '<span class="ptag ptag-jp">🇯🇵 Versión japonesa</span>'
           : prod.region === 'PAL'  ? '<span class="ptag ptag-eu">🇪🇺 Versión europea</span>'
           : prod.region === 'NTSC-U' ? '<span class="ptag ptag-us">🇺🇸 Versión americana</span>'
-          : '<span class="ptag ptag-red">🇯🇵 Japón disponible</span>'}
+          : ''}
       </div>
     </div>
     <div class="prod-actions">
@@ -977,6 +1037,10 @@ function renderProdHeader(prod) {
       if (ph) { const img = document.createElement('img'); img.className = 'prod-img'; img.src = prod.img; img.alt = prod.name; ph.replaceWith(img); }
     };
     i.src = prod.img;
+  } else if (prod.type === 'game') {
+    // Sin imagen → pedir a RAWG (usa caché si ya lo buscamos antes)
+    const ph = document.getElementById('prod-ico');
+    if (ph) rawgImg(ph, prod.name, 'prod-img');
   }
 }
 
