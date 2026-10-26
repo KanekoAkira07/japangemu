@@ -77,7 +77,7 @@ body.light nav{background:rgba(245,245,248,0.95)}
 .sug-item{display:flex;align-items:center;gap:.85rem;padding:.72rem 1rem;cursor:pointer;transition:background .12s;border-bottom:1px solid var(--border)}
 .sug-item:last-child{border-bottom:none}
 .sug-item:hover{background:var(--surface2)}
-.sug-ico{width:36px;height:36px;border-radius:7px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.sug-ico{width:36px;height:36px;border-radius:7px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}.sug-ico svg,.wcard-ico svg,.prod-ico svg,.icard-thumb svg{width:100%;height:100%;display:block}
 .sug-img{width:36px;height:36px;border-radius:7px;object-fit:cover;flex-shrink:0;background:var(--surface3)}
 .sug-info{flex:1;min-width:0}
 .sug-name{font-weight:700;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -307,16 +307,17 @@ body.light nav{background:rgba(245,245,248,0.95)}
 <nav>
   <div class="nav-logo"><span class="logo-j">JAPAN</span><span class="logo-g">GEMU</span></div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="goPage('valorador')">🔍 Valorador</button>
-    <button class="nav-tab" onclick="goPage('portfolio')">📦 Colección</button>
+    <button class="nav-tab active" onclick="goPage('valorador')">🔍 Price Checker</button>
+    <button class="nav-tab" onclick="goPage('portfolio')">📦 Collection</button>
     <button class="nav-tab" onclick="goPage('wishlist')">⭐ Wishlist</button>
     <button class="nav-tab" onclick="goPage('dashboard')">📊 Dashboard</button>
   </div>
   <div class="nav-right">
-    <button class="icon-btn" onclick="toggleTheme()" title="Tema">🌙</button>
-    <button class="icon-btn" title="Notificaciones">🔔<span class="notif-dot"></span></button>
+    <button class="icon-btn" onclick="toggleTheme()" title="Theme">🌙</button>
+    <button class="icon-btn" id="lang-btn" onclick="switchLang()" title="Language" style="font-size:.65rem;font-weight:800;font-family:Syne,sans-serif;letter-spacing:.5px">ES</button>
+    <button class="icon-btn" title="Notifications">🔔<span class="notif-dot"></span></button>
     <div id="account-area">
-      <button class="btn-primary" onclick="openModal('login-modal')">Entrar</button>
+      <button class="btn-primary" onclick="openModal('login-modal')">Sign In</button>
     </div>
   </div>
 </nav>
@@ -324,9 +325,9 @@ body.light nav{background:rgba(245,245,248,0.95)}
 <!-- VALORADOR -->
 <div class="page active" id="page-valorador">
   <div class="hero">
-    <div class="hero-eyebrow">🇯🇵 Precios del mercado japonés en español</div>
-    <h1 class="hero-title">¿Cuánto vale<br><em>tu colección?</em></h1>
-    <p class="hero-sub">Busca cualquier videojuego retro, consola o figura y consulta precios reales de eBay, Mercari JP, Wallapop y Mercado Libre.</p>
+    <div class="hero-eyebrow">🇯🇵 Japanese market prices in your language</div>
+    <h1 class="hero-title">What's your<br><em>collection worth?</em></h1>
+    <p class="hero-sub">Search any retro game, console or figure and get real prices from eBay, Mercari JP, Wallapop and Mercado Libre.</p>
     <div class="search-outer" id="search-outer">
       <div class="search-filters">
         <button class="sf-btn active" onclick="setFilter('all',this)">Todo</button>
@@ -535,7 +536,7 @@ body.light nav{background:rgba(245,245,248,0.95)}
     <div id="add-selected" style="display:none">
       <div class="sel-prod" id="sel-prod-display"></div>
       <label class="modal-lbl">Estado del ítem</label>
-      <div class="cond-tabs">
+      <div class="cond-tabs" id="cond-tabs-modal">
         <button class="ctab active" onclick="setCond('loose',this)">Solo cartucho</button>
         <button class="ctab" onclick="setCond('complete',this)">Completo (CIB)</button>
         <button class="ctab" onclick="setCond('new',this)">Nuevo sellado</button>
@@ -585,24 +586,53 @@ const S = {
 const JPY = 0.0067;
 
 // ═══ PLATAFORMAS ═══
+const PI = {
+  ps1:`<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="19" fill="#181818" stroke="#3a3a3a" stroke-width="1.5"/><circle cx="24" cy="24" r="19" fill="none" stroke="#E8003D" stroke-width="0.7" opacity="0.5"/><circle cx="24" cy="24" r="5.5" fill="#0a0a0f" stroke="#555" stroke-width="1"/><circle cx="24" cy="24" r="1.8" fill="#555"/></svg>`,
+  ps2:`<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="19" fill="#10182a" stroke="#3D8EF0" stroke-width="1.5"/><circle cx="24" cy="24" r="5.5" fill="#0a0a0f" stroke="#3D8EF0" stroke-width="1" opacity="0.7"/><circle cx="24" cy="24" r="1.8" fill="#3D8EF0" opacity="0.7"/></svg>`,
+  ps3:`<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="19" fill="#0a1520" stroke="#5588cc" stroke-width="1.5"/><circle cx="24" cy="24" r="5.5" fill="#0a0a0f" stroke="#5588cc" stroke-width="1"/><circle cx="24" cy="24" r="1.8" fill="#5588cc"/></svg>`,
+  psp:`<svg viewBox="0 0 48 48" fill="none"><rect x="4" y="16" width="40" height="16" rx="8" fill="#181828" stroke="#3D8EF0" stroke-width="1.3"/><circle cx="24" cy="24" r="5" fill="#0a0a0f" stroke="#3D8EF0" stroke-width="0.8"/><circle cx="24" cy="24" r="1.5" fill="#3D8EF0"/></svg>`,
+  saturn:`<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="19" fill="#3a3a45" stroke="#8888a0" stroke-width="1.5"/><circle cx="24" cy="24" r="5.5" fill="#0a0a0f" stroke="#aaa" stroke-width="1"/><circle cx="24" cy="24" r="1.8" fill="#aaa"/></svg>`,
+  dreamcast:`<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="19" fill="#dde0e8" stroke="#ff7a3d" stroke-width="1.5"/><circle cx="24" cy="24" r="5.5" fill="#0a0a0f" stroke="#ff7a3d" stroke-width="1"/><circle cx="24" cy="24" r="1.8" fill="#ff7a3d"/></svg>`,
+  n64:`<svg viewBox="0 0 48 48" fill="none"><path d="M10 10 h28 a3 3 0 0 1 3 3 v6 a3 3 0 0 1 -3 3 h-2 v14 a2 2 0 0 1 -2 2 h-20 a2 2 0 0 1 -2 -2 v-14 h-2 a3 3 0 0 1 -3 -3 v-6 a3 3 0 0 1 3 -3 z" fill="#1d1d27" stroke="#6a6a85" stroke-width="1.3"/><rect x="14" y="22" width="20" height="11" rx="1" fill="#0a0a0f"/><text x="24" y="30.5" font-size="8" font-weight="bold" fill="#C89B3C" text-anchor="middle" font-family="Arial">64</text></svg>`,
+  snes:`<svg viewBox="0 0 48 48" fill="none"><rect x="10" y="8" width="28" height="34" rx="3" fill="#1d1d27" stroke="#6a6a85" stroke-width="1.5"/><rect x="14" y="12" width="20" height="12" rx="1.5" fill="#7a5fc0" opacity="0.6"/><rect x="16" y="28" width="16" height="3" rx="1" fill="#4a4a6a"/><rect x="16" y="33" width="16" height="3" rx="1" fill="#4a4a6a"/><rect x="18" y="4" width="12" height="6" rx="1" fill="#2a2a38"/></svg>`,
+  nes:`<svg viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="24" rx="2" fill="#1d1d27" stroke="#6a6a85" stroke-width="1.5"/><rect x="12" y="16" width="24" height="8" fill="#E8003D" opacity="0.45"/><rect x="12" y="26" width="24" height="6" fill="#2a2a38"/><rect x="20" y="8" width="8" height="6" fill="#2a2a38"/></svg>`,
+  famicom:`<svg viewBox="0 0 48 48" fill="none"><rect x="8" y="12" width="32" height="24" rx="2" fill="#1d1d27" stroke="#6a6a85" stroke-width="1.5"/><rect x="12" y="16" width="24" height="8" fill="#C89B3C" opacity="0.5"/><rect x="12" y="26" width="24" height="6" fill="#2a2a38"/><rect x="20" y="8" width="8" height="6" fill="#2a2a38"/></svg>`,
+  gameboy:`<svg viewBox="0 0 48 48" fill="none"><rect x="14" y="4" width="20" height="40" rx="3" fill="#1d1d27" stroke="#6a6a85" stroke-width="1.5"/><rect x="17" y="8" width="14" height="11" rx="1" fill="#00C07A" opacity="0.45"/><circle cx="24" cy="28" r="3.5" fill="#2a2a38"/><circle cx="19" cy="35" r="1.8" fill="#E8003D" opacity="0.6"/><circle cx="29" cy="35" r="1.8" fill="#3D8EF0" opacity="0.6"/></svg>`,
+  megadrive:`<svg viewBox="0 0 48 48" fill="none"><rect x="9" y="10" width="30" height="30" rx="2" fill="#1d1d27" stroke="#6a6a85" stroke-width="1.5"/><rect x="13" y="14" width="22" height="9" fill="#3D8EF0" opacity="0.45"/><rect x="13" y="27" width="22" height="3" fill="#2a2a38"/><rect x="13" y="32" width="22" height="3" fill="#2a2a38"/></svg>`,
+  neogeo:`<svg viewBox="0 0 48 48" fill="none"><rect x="13" y="6" width="22" height="36" rx="4" fill="#1d1d27" stroke="#C89B3C" stroke-width="1.5"/><rect x="17" y="10" width="14" height="11" rx="1" fill="#C89B3C" opacity="0.4"/><circle cx="24" cy="29" r="3" fill="#2a2a38"/></svg>`,
+  pcengine:`<svg viewBox="0 0 48 48" fill="none"><rect x="6" y="16" width="36" height="16" rx="8" fill="#1d1d27" stroke="#6a6a85" stroke-width="1.5"/><rect x="10" y="20" width="20" height="8" rx="4" fill="#00C07A" opacity="0.4"/></svg>`,
+  figure:`<svg viewBox="0 0 48 48" fill="none"><path d="M24 4 L38 12 V32 L24 40 L10 32 V12 Z" fill="#1d1d27" stroke="#C89B3C" stroke-width="1.5"/><circle cx="24" cy="20" r="6" fill="#C89B3C" opacity="0.4"/><rect x="20" y="27" width="8" height="9" rx="1" fill="#C89B3C" opacity="0.3"/></svg>`,
+  game:`<svg viewBox="0 0 48 48" fill="none"><rect x="10" y="8" width="28" height="34" rx="3" fill="#1d1d27" stroke="#6a6a85" stroke-width="1.5"/><rect x="14" y="12" width="20" height="12" rx="1.5" fill="#3D8EF0" opacity="0.4"/><rect x="16" y="28" width="16" height="3" rx="1" fill="#4a4a6a"/><rect x="16" y="33" width="16" height="3" rx="1" fill="#4a4a6a"/></svg>`
+};
+
+function platIcon(p) {
+  if (!p) return PI.game;
+  const s = p.toLowerCase();
+  if (s.includes('figura')||s.includes('figure')||s.includes('figuarts')||s.includes('nendoroid')||s.includes('ichiban')||s.includes('bandai')||s.includes('good smile')) return PI.figure;
+  if (s.includes('playstation 1')||s.includes('ps1')||s.includes('psx')||(s.includes('playstation')&&!s.includes('2')&&!s.includes('3')&&!s.includes('4')&&!s.includes('5'))) return PI.ps1;
+  if (s.includes('playstation 2')||s.includes('ps2')) return PI.ps2;
+  if (s.includes('playstation 3')||s.includes('ps3')) return PI.ps3;
+  if (s.includes('psp')) return PI.psp;
+  if (s.includes('saturn')) return PI.saturn;
+  if (s.includes('dreamcast')) return PI.dreamcast;
+  if (s.includes('nintendo 64')||s.includes('n64')) return PI.n64;
+  if (s.includes('super nintendo')||s.includes('snes')) return PI.snes;
+  if (s.includes('famicom')) return PI.famicom;
+  if (s.includes('nes')&&!s.includes('snes')) return PI.nes;
+  if (s.includes('game boy')||s.includes('gameboy')||s.includes('gba')||s.includes('gbc')) return PI.gameboy;
+  if (s.includes('mega drive')||s.includes('genesis')||s.includes('sega')) return PI.megadrive;
+  if (s.includes('neo geo')) return PI.neogeo;
+  if (s.includes('pc engine')||s.includes('turbografx')) return PI.pcengine;
+  return PI.game;
+}
+
 function platEmoji(p) {
   if (!p) return '🎮';
   const s = p.toLowerCase();
-  if (s.includes('figura') || s.includes('figure')) return '🗿';
-  if (s.includes('game boy') || s.includes('gameboy') || s.includes('gba') || s.includes('gbc')) return '🎮';
-  if (s.includes('super nintendo') || s.includes('snes')) return '🎮';
-  if (s.includes('nintendo 64') || s.includes('n64')) return '🎮';
-  if (s.includes('gamecube')) return '🎮';
-  if (s.includes('wii')) return '🎮';
-  if (s.includes('switch')) return '🎮';
-  if (s.includes('nes') && !s.includes('snes')) return '🕹️';
-  if (s.includes('playstation') || s.includes('ps1') || s.includes('ps2') || s.includes('ps3') || s.includes('psx') || s.includes('psp')) return '💿';
-  if (s.includes('mega drive') || s.includes('genesis') || s.includes('sega')) return '🕹️';
-  if (s.includes('saturn')) return '💿';
-  if (s.includes('dreamcast')) return '💿';
-  if (s.includes('neo geo')) return '🕹️';
-  if (s.includes('pc engine') || s.includes('turbografx')) return '🕹️';
-  if (s.includes('xbox')) return '🎮';
+  if (s.includes('figura')||s.includes('figure')||s.includes('figuarts')||s.includes('nendoroid')) return '🗿';
+  if (s.includes('saturn')||s.includes('dreamcast')||s.includes('playstation')||s.includes('ps1')||s.includes('ps2')) return '💿';
+  if (s.includes('nes')||s.includes('snes')||s.includes('n64')||s.includes('nintendo')) return '🎮';
+  if (s.includes('mega drive')||s.includes('sega')||s.includes('neo geo')) return '🕹️';
   return '🎮';
 }
 
@@ -669,46 +699,59 @@ async function getIGDBToken() {
 
 async function fetchSugs(q) {
   showDrop();
-  document.getElementById('search-sugs').innerHTML = '<div class="sug-loading"><span class="dot"></span><span class="dot"></span><span class="dot"></span> Buscando...</div>';
-  // Primero buscar en catálogo local (funciona siempre, sin servidor)
+
+  // ── PASO 1: resultados locales INMEDIATOS (sin esperar nada) ──────────────
   const localRes = getLocalResults(q);
-  if (localRes.length > 0) renderSugs(localRes);
+  if (localRes.length > 0) {
+    renderSugs(localRes);
+    // Añadir indicador sutil de búsqueda en curso
+    const el = document.getElementById('search-sugs');
+    if (el) {
+      const badge = document.createElement('div');
+      badge.id = 'igdb-status';
+      badge.style.cssText = 'padding:.3rem 1rem;font-size:.68rem;color:var(--muted2);text-align:right';
+      badge.textContent = '⟳ searching IGDB…';
+      el.appendChild(badge);
+    }
+  } else {
+    document.getElementById('search-sugs').innerHTML =
+      '<div class="sug-loading"><span class="dot"></span><span class="dot"></span><span class="dot"></span> Searching…</div>';
+  }
 
-  // Luego intentar IGDB en paralelo (funciona cuando hay servidor)
+  // ── PASO 2: llamar al serverless (IGDB) con timeout de 5s ────────────────
+  let igdbResults = [];
   try {
-    const token = await getIGDBToken();
-    if (!token) return;
-
-    const body = `search ${q}; fields id,name,platforms.name,cover.url,first_release_date,category; where category = (0,4,8,9); limit 15;`;
-    const res = await fetch('https://api.igdb.com/v4/games', {
-      method: 'POST',
-      headers: {
-        'Client-ID': IGDB_CLIENT_ID,
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(`/api/igdb-search?q=${encodeURIComponent(q)}`, {
+      signal: controller.signal
     });
-    const games = await res.json();
-    if (!Array.isArray(games) || games.length === 0) return;
+    clearTimeout(tid);
+    if (res.ok) {
+      const data = await res.json();
+      igdbResults = Array.isArray(data.results) ? data.results : [];
+    }
+  } catch(_) { /* timeout o CORS — ignorar, usar solo locales */ }
 
-    let igdbRes = games.filter(g => g.name).map(g => ({
-      id: 'igdb:' + g.id,
-      name: g.name,
-      platform: g.platforms?.[0]?.name || 'Desconocida',
-      type: 'game',
-      year: g.first_release_date ? new Date(g.first_release_date * 1000).getFullYear() : null,
-      img: g.cover?.url ? g.cover.url.replace('t_thumb','t_cover_big').replace('//','https://') : null
-    }));
+  // ── PASO 3: combinar y renderizar resultado final ─────────────────────────
+  const extras = localRes.filter(i => i.type !== 'game');
+  let combined = [...igdbResults, ...extras];
+  if (S.filter && S.filter !== 'all') {
+    combined = combined.filter(i => {
+      if (S.filter === 'games')   return i.type === 'game';
+      if (S.filter === 'consoles') return i.type === 'console';
+      if (S.filter === 'figures') return i.type === 'figure';
+      return true;
+    });
+  }
 
-    // Combinar IGDB con locales (figuras y consolas)
-    const extras = getLocalResults(q).filter(i => i.type !== 'game');
-    let combined = [...igdbRes, ...extras];
-    if (S.filter !== 'all') combined = combined.filter(i => i.type === S.filter);
+  const el = document.getElementById('search-sugs');
+  if (!el) return;
+
+  if (combined.length === 0) {
+    el.innerHTML = `<div style="padding:1.2rem 1rem;color:var(--muted2);font-size:.85rem;text-align:center">No results for "${q}"</div>`;
+  } else {
     renderSugs(combined.slice(0, 15));
-
-  } catch(e) {
-    // IGDB bloqueado por CORS en archivo local — los resultados locales ya se mostraron
   }
 }
 
@@ -767,6 +810,29 @@ function getLocalResults(q) {
     {id:'igdb:1080',name:'Mega Man X',platform:'Super Nintendo',type:'game',year:1993,img:null},
     {id:'igdb:5512',name:'Contra',platform:'NES',type:'game',year:1987,img:null},
     {id:'igdb:3566',name:'Ninja Gaiden',platform:'NES',type:'game',year:1988,img:null},
+    // Game Boy / GBA
+    {id:'igdb:9001',name:'Wario Land: Super Mario Land 3',platform:'Game Boy',type:'game',year:1994,img:null},
+    {id:'igdb:9002',name:'Wario Land II',platform:'Game Boy Color',type:'game',year:1998,img:null},
+    {id:'igdb:9003',name:'Wario Land 3',platform:'Game Boy Color',type:'game',year:2000,img:null},
+    {id:'igdb:9004',name:'Wario Land 4',platform:'Game Boy Advance',type:'game',year:2001,img:null},
+    {id:'igdb:9005',name:'WarioWare, Inc.: Mega Microgame$',platform:'Game Boy Advance',type:'game',year:2003,img:null},
+    {id:'igdb:9006',name:'WarioWare: Twisted!',platform:'Game Boy Advance',type:'game',year:2004,img:null},
+    {id:'igdb:9007',name:'Pokémon FireRed / LeafGreen',platform:'Game Boy Advance',type:'game',year:2004,img:null},
+    {id:'igdb:9008',name:'Pokémon Emerald',platform:'Game Boy Advance',type:'game',year:2005,img:null},
+    {id:'igdb:9009',name:'The Legend of Zelda: The Minish Cap',platform:'Game Boy Advance',type:'game',year:2004,img:null},
+    {id:'igdb:9010',name:'Metroid Fusion',platform:'Game Boy Advance',type:'game',year:2002,img:null},
+    {id:'igdb:9011',name:'Metroid: Zero Mission',platform:'Game Boy Advance',type:'game',year:2004,img:null},
+    {id:'igdb:9012',name:'Castlevania: Aria of Sorrow',platform:'Game Boy Advance',type:'game',year:2003,img:null},
+    {id:'igdb:9013',name:'Castlevania: Circle of the Moon',platform:'Game Boy Advance',type:'game',year:2001,img:null},
+    {id:'igdb:9014',name:'Final Fantasy VI Advance',platform:'Game Boy Advance',type:'game',year:2006,img:null},
+    {id:'igdb:9015',name:'Mother 3',platform:'Game Boy Advance',type:'game',year:2006,img:null},
+    {id:'igdb:9016',name:'Super Mario Advance 4',platform:'Game Boy Advance',type:'game',year:2003,img:null},
+    {id:'igdb:9017',name:'Mario Kart: Super Circuit',platform:'Game Boy Advance',type:'game',year:2001,img:null},
+    {id:'igdb:9018',name:'Fire Emblem',platform:'Game Boy Advance',type:'game',year:2003,img:null},
+    {id:'igdb:9019',name:'Kirby: Nightmare in Dream Land',platform:'Game Boy Advance',type:'game',year:2002,img:null},
+    {id:'igdb:9020',name:'Sonic Advance',platform:'Game Boy Advance',type:'game',year:2001,img:null},
+    {id:'igdb:9021',name:'Dragon Ball Z: Buu\'s Fury',platform:'Game Boy Advance',type:'game',year:2004,img:null},
+    {id:'igdb:9022',name:'Dragon Ball Z: Legacy of Goku II',platform:'Game Boy Advance',type:'game',year:2003,img:null},
     // Consolas
     {id:'console:001',name:'Super Nintendo (SNES)',platform:'Consola',type:'console',year:1990,img:null},
     {id:'console:002',name:'Nintendo 64',platform:'Consola',type:'console',year:1996,img:null},
@@ -811,9 +877,7 @@ function renderSugs(items) {
   items.slice(0, 12).forEach(item => {
     const d = document.createElement('div');
     d.className = 'sug-item';
-    const thumb = item.img
-      ? `<img class="sug-img" src="${item.img}" alt="" onerror="this.outerHTML='<div class=sug-ico>${platEmoji(item.platform)}</div>'">`
-      : `<div class="sug-ico">${platEmoji(item.platform)}</div>`;
+    const thumb = `<div class="sug-ico" style="background:none;padding:2px">${platIcon(item.platform)}</div>`;
     d.innerHTML = `${thumb}<div class="sug-info"><div class="sug-name">${esc(item.name)}</div><div class="sug-meta">${item.year ? item.year + ' · ' : ''}${esc(item.platform)}</div></div><span class="sug-badge">${esc(item.platform)}</span>`;
     d.onclick = () => selectProduct(item);
     c.appendChild(d);
@@ -843,7 +907,7 @@ function selectProduct(prod) {
 function renderProdHeader(prod) {
   const el = document.getElementById('prod-header');
   el.innerHTML = `
-    <div class="prod-ico" id="prod-ico">${platEmoji(prod.platform)}</div>
+    <div class="prod-ico" id="prod-ico" style="background:none;padding:4px">${platIcon(prod.platform)}</div>
     <div>
       <div class="prod-name">${esc(prod.name)}</div>
       <div class="prod-tags">
@@ -867,6 +931,14 @@ function renderProdHeader(prod) {
 
 function loadDemoPrices(prod) {
   const n = prod.name.toLowerCase();
+  // Platform type — needed throughout this function
+  const plat = (prod.platform || '').toLowerCase();
+  const isDisc = plat.includes('playstation')||plat.includes('ps1')||plat.includes('ps2')||plat.includes('ps3')||plat.includes('saturn')||plat.includes('dreamcast')||plat.includes('psx');
+  const isFigure = plat.includes('figura')||plat.includes('figure')||plat.includes('figuarts')||plat.includes('nendoroid')||plat.includes('ichiban')||plat.includes('bandai')||plat.includes('good smile')||(prod.type==='figure');
+  let label1, label2, label3;
+  if (isFigure) { label1='Sin caja'; label2='Con caja'; label3='Sellada / Mint'; }
+  else if (isDisc) { label1='Solo disco'; label2='Completo (con caja y manual)'; label3='Nuevo sellado'; }
+  else { label1='Solo cartucho'; label2='Completo (CIB)'; label3='Nuevo sellado'; }
   let base = 20;
   if (n.includes('chrono')) base = 140;
   else if (n.includes('zelda') || n.includes('ocarina')) base = 62;
@@ -885,7 +957,7 @@ function loadDemoPrices(prod) {
     <div>
       <div class="con-label">🎯 Precio consenso de mercado</div>
       <div class="con-price">$${fmt(base * 1.05)}</div>
-      <div class="con-range">Rango: $${fmt(base * 0.72)} — $${fmt(base * 1.55)} USD</div>
+      <div class="con-range">Rango: $${fmt(base * 0.72)} — $${fmt(base * 1.55)} USD · ${isDisc ? 'disco solo' : isFigure ? 'sin caja' : 'cartucho solo'} como referencia base</div>
     </div>
     <div class="con-sample">12 ventas analizadas</div>`;
 
@@ -895,19 +967,19 @@ function loadDemoPrices(prod) {
     <a class="ref-row" href="https://www.pricecharting.com" target="_blank" rel="noopener">
       <div class="ref-source"><span class="ref-flag">🇺🇸</span><div><div class="ref-name">PriceCharting</div><div class="ref-region">Global · USD</div></div></div>
       <div class="ref-conds">
-        <div><div class="ref-cond-label">Solo cartucho</div><div class="ref-cond-val">$${fmt(loose)}</div></div>
-        <div><div class="ref-cond-label">Completo (CIB)</div><div class="ref-cond-val">$${fmt(complete)}</div></div>
-        <div><div class="ref-cond-label">Nuevo sellado</div><div class="ref-cond-val">$${fmt(newPrice)}</div></div>
-        <div><div class="ref-cond-label">Gradado (PSA/CGC)</div><div class="ref-cond-val">$${fmt(base * 8)}</div></div>
+        <div><div class="ref-cond-label">${label1}</div><div class="ref-cond-val">$${fmt(loose)}</div></div>
+        <div><div class="ref-cond-label">${label2}</div><div class="ref-cond-val">$${fmt(complete)}</div></div>
+        <div><div class="ref-cond-label">${label3}</div><div class="ref-cond-val">$${fmt(newPrice)}</div></div>
+        ${!isFigure ? `<div><div class="ref-cond-label">Gradado (PSA/CGC)</div><div class="ref-cond-val">$${fmt(base * 8)}</div></div>` : ''}
       </div>
       <span class="ref-arrow">↗</span>
     </a>
     <a class="ref-row" href="https://www.gamevaluenow.com" target="_blank" rel="noopener">
       <div class="ref-source"><span class="ref-flag">🇺🇸</span><div><div class="ref-name">GameValueNow</div><div class="ref-region">Global · USD</div></div></div>
       <div class="ref-conds">
-        <div><div class="ref-cond-label">Solo cartucho</div><div class="ref-cond-val">$${fmt(loose * 0.95)}</div></div>
-        <div><div class="ref-cond-label">Completo (CIB)</div><div class="ref-cond-val">$${fmt(complete * 1.03)}</div></div>
-        <div><div class="ref-cond-label">Nuevo sellado</div><div class="ref-cond-val">$${fmt(newPrice * 0.98)}</div></div>
+        <div><div class="ref-cond-label">${label1}</div><div class="ref-cond-val">$${fmt(loose * 0.95)}</div></div>
+        <div><div class="ref-cond-label">${label2}</div><div class="ref-cond-val">$${fmt(complete * 1.03)}</div></div>
+        <div><div class="ref-cond-label">${label3}</div><div class="ref-cond-val">$${fmt(newPrice * 0.98)}</div></div>
       </div>
       <span class="ref-arrow">↗</span>
     </a>`;
@@ -1023,7 +1095,7 @@ function renderPortfolio(filterType) {
       const tr = trendOpts[Math.floor(Math.random() * 3)];
       const cl = {loose:'Suelto',complete:'Completo',new:'Nuevo'};
       card.innerHTML = `
-        <div class="icard-thumb"><span>${platEmoji(item.platform)}</span><div class="trend-b tb-${tr}">${tl[tr]}</div></div>
+        <div class="icard-thumb" style="padding:8px;align-items:center;justify-content:center">${platIcon(item.platform)}<div class="trend-b tb-${tr}">${tl[tr]}</div></div>
         <div class="icard-info">
           <div class="icard-name">${esc(item.name)}</div>
           <div class="icard-plat">${esc(item.platform || '')}</div>
@@ -1068,7 +1140,7 @@ function renderWishlist() {
     const card = document.createElement('div'); card.className = 'wcard';
     card.innerHTML = `
       <div class="wcard-top">
-        <div class="wcard-ico">${platEmoji(item.platform)}</div>
+        <div class="wcard-ico" style="background:none;padding:2px">${platIcon(item.platform)}</div>
         <div><div class="wcard-title">${esc(item.name)}</div><div class="wcard-plat">${esc(item.platform || '')}</div></div>
       </div>
       <div class="wcard-price-row">
@@ -1316,15 +1388,28 @@ function onModalSearch(v) {
     const c = document.getElementById('add-search-res'); c.innerHTML = '';
     res.forEach(item => {
       const d = document.createElement('div'); d.className = 'sug-item';
-      d.innerHTML = `<div class="sug-ico">${platEmoji(item.platform)}</div><div class="sug-info"><div class="sug-name">${esc(item.name)}</div><div class="sug-meta">${esc(item.platform)}</div></div>`;
+      d.innerHTML = `<div class="sug-ico" style="background:none;padding:2px">${platIcon(item.platform)}</div><div class="sug-info"><div class="sug-name">${esc(item.name)}</div><div class="sug-meta">${esc(item.platform)}</div></div>`;
       d.onclick = () => { S.addProd = item; document.getElementById('add-search-inp').value = item.name; document.getElementById('add-search-res').innerHTML = ''; showSelProd(item); };
       c.appendChild(d);
     });
   }, 220);
 }
 function showSelProd(prod) {
-  document.getElementById('sel-prod-display').innerHTML = `<div style="font-size:1.5rem">${platEmoji(prod.platform)}</div><div><div class="sel-prod-name">${esc(prod.name)}</div><div class="sel-prod-meta">${esc(prod.platform||'')}</div></div>`;
+  document.getElementById('sel-prod-display').innerHTML = `<div style="width:36px;height:36px;flex-shrink:0">${platIcon(prod.platform)}</div><div><div class="sel-prod-name">${esc(prod.name)}</div><div class="sel-prod-meta">${esc(prod.platform||'')}</div></div>`;
   document.getElementById('add-selected').style.display = 'block';
+  
+  // Ajustar etiquetas de condición según plataforma
+  const p = (prod.platform || '').toLowerCase();
+  const isDisc = p.includes('playstation')||p.includes('ps1')||p.includes('ps2')||p.includes('ps3')||p.includes('saturn')||p.includes('dreamcast');
+  const isFig = p.includes('figura')||p.includes('figure')||p.includes('figuarts')||p.includes('nendoroid')||p.includes('ichiban')||(prod.type==='figure');
+  const tabs = document.querySelectorAll('#cond-tabs-modal .ctab');
+  if (isFig) {
+    tabs[0].textContent = 'Sin caja'; tabs[1].textContent = 'Con caja'; tabs[2].textContent = 'Sellada / Mint';
+  } else if (isDisc) {
+    tabs[0].textContent = 'Solo disco'; tabs[1].textContent = 'Completo (con manual)'; tabs[2].textContent = 'Nuevo sellado';
+  } else {
+    tabs[0].textContent = 'Solo cartucho'; tabs[1].textContent = 'Completo (CIB)'; tabs[2].textContent = 'Nuevo sellado';
+  }
 }
 function setCond(c, btn) { S.cond = c; document.querySelectorAll('.ctab').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
 function confirmAdd() {
@@ -1367,12 +1452,169 @@ function toast(msg, err=false) {
   document.body.appendChild(el); setTimeout(() => el.remove(), 3000);
 }
 
+// ═══ SISTEMA BILINGÜE ═══
+const LANG = {
+  en: {
+    nav_search:'Price Checker',nav_collection:'Collection',nav_wishlist:'Wishlist',nav_dashboard:'Dashboard',
+    hero_eyebrow:'🇯🇵 Japanese market prices in your language',
+    hero_title:"What's your<br><em>collection worth?</em>",
+    hero_sub:'Search any retro game, console or figure and get real prices from eBay, Mercari JP, Wallapop and Mercado Libre.',
+    filter_all:'All',filter_games:'Games',filter_consoles:'Consoles',filter_figures:'Figures',
+    search_placeholder:'Zelda Ocarina, PS1, Dragon Ball Figuarts...',
+    empty_hint:'Over 50,000 products in our database',
+    consensus_label:'🎯 Market consensus price',
+    group_reference:'Reference valuation',group_reference_sub:'PriceCharting · GameValueNow',group_reference_tag:'No transaction',
+    group_sold:'Last closed sales',group_sold_tag:'Real price paid',group_sold_sub:'Last 6 months · includes auctions',
+    group_live:'Available now',group_live_tag:'Listed today',
+    cta_collection:'📦 Add to my collection',cta_wishlist:'⭐ Add to wishlist',
+    port_heading:'My',port_heading_accent:'Collection',
+    port_sub:'Value updated in real time based on the market',port_add:'+ Add',
+    stat_total:'Total value',stat_pieces:'Items',stat_top:'Most valuable',
+    sort_recent:'Most recent',sort_value_desc:'Highest value',sort_value_asc:'Lowest value',
+    add_first:'Add your first item',add_item:'Add item',
+    cond_loose:'Loose',cond_complete:'Complete',cond_new2:'New',
+    wish_heading:'My',wish_heading_accent:'Wishlist',
+    wish_sub:'Get alerts when your product is listed for sale in any market',
+    prem_title:'New listing alerts — $3/month',
+    prem_desc:'We notify you as soon as your product is listed on eBay, Mercari JP, Wallapop or Mercado Libre. You decide if the price works.',
+    prem_btn:'Activate alerts',wish_add:'+ Add to wishlist',
+    wish_empty_title:'Your wishlist is empty',wish_empty_sub:'Search a product and add it to receive listing alerts',
+    dash_heading:'Dashboard',dash_heading_accent:'& Market',
+    dash_chart_title:'Your collection value',dash_breakdown:'Collection by category',
+    dash_up:'📈 Rising this week',dash_down:'📉 Falling this week',dash_updated:'Updated today',
+    dash_japan:'🇯🇵 Japan Opportunities',dash_japan_tag:'Cheaper on Mercari JP',
+    dash_japan_desc:'Products currently cheaper in Japan than on eBay USA.',
+    dash_news:'🔔 Market news',dash_movers:'🔥 Most searched today',dash_vs:'vs USA',
+    login_title:'Welcome',login_sub:'Sign in to save your collection and activate alerts',
+    login_google:'Continue with Google',login_btn:'Sign In →',login_terms:'By signing in you agree to our',login_terms_link:'Terms of use',
+    add_modal_title:'Add to my collection',add_btn:'Add to my collection',
+    prem_modal_title:'JapanGemu Premium',prem_modal_sub:'Listing alerts across all markets, including Japan',
+    prem_features:['Alert when your product is listed for sale','Mercari JP monitoring every 30 minutes','eBay, Wallapop & Mercado Libre alerts','Optional max price filter','Extended price history — 12 months'],
+    prem_start:'Start for $3/month',prem_cancel:'Cancel anytime · No commitment',
+  },
+  es: {
+    nav_search:'Valorador',nav_collection:'Colección',nav_wishlist:'Wishlist',nav_dashboard:'Dashboard',
+    hero_eyebrow:'🇯🇵 Precios del mercado japonés en español',
+    hero_title:'¿Cuánto vale<br><em>tu colección?</em>',
+    hero_sub:'Busca cualquier videojuego retro, consola o figura y consulta precios reales de eBay, Mercari JP, Wallapop y Mercado Libre.',
+    filter_all:'Todo',filter_games:'Videojuegos',filter_consoles:'Consolas',filter_figures:'Figuras',
+    search_placeholder:'Zelda Ocarina, PS1, Dragon Ball Figuarts...',
+    empty_hint:'Más de 50.000 productos en nuestra base de datos',
+    consensus_label:'🎯 Precio consenso de mercado',
+    group_reference:'Valoración de referencia',group_reference_sub:'PriceCharting · GameValueNow',group_reference_tag:'Sin transacción',
+    group_sold:'Últimas ventas cerradas',group_sold_tag:'Precio real pagado',group_sold_sub:'Últimos 6 meses · incluye subastas',
+    group_live:'En venta ahora',group_live_tag:'Disponible hoy',
+    cta_collection:'📦 Añadir a mi colección',cta_wishlist:'⭐ Añadir a wishlist',
+    port_heading:'Mi',port_heading_accent:'Colección',
+    port_sub:'Valor actualizado en tiempo real según el mercado',port_add:'+ Añadir',
+    stat_total:'Valor total',stat_pieces:'Piezas',stat_top:'Ítem más valioso',
+    sort_recent:'Más reciente',sort_value_desc:'Mayor valor',sort_value_asc:'Menor valor',
+    add_first:'Añade tu primer ítem',add_item:'Añadir ítem',
+    cond_loose:'Suelto',cond_complete:'Completo',cond_new2:'Nuevo',
+    wish_heading:'Mi',wish_heading_accent:'Wishlist',
+    wish_sub:'Recibe alertas cuando aparezca tu producto en venta en cualquier mercado',
+    prem_title:'Alertas de nuevo anuncio — 3 USD/mes',
+    prem_desc:'Te avisamos en cuanto aparezca tu producto en venta en eBay, Mercari JP, Wallapop o Mercado Libre. Tú decides si el precio te conviene.',
+    prem_btn:'Activar alertas',wish_add:'+ Añadir a wishlist',
+    wish_empty_title:'Tu wishlist está vacía',wish_empty_sub:'Busca un producto y añádelo para recibir alertas cuando aparezca en venta',
+    dash_heading:'Dashboard',dash_heading_accent:'& Mercado',
+    dash_chart_title:'Valor de tu colección',dash_breakdown:'Tu colección por categoría',
+    dash_up:'📈 Subidas esta semana',dash_down:'📉 Bajadas esta semana',dash_updated:'Actualizado hoy',
+    dash_japan:'🇯🇵 Oportunidades en Japón',dash_japan_tag:'Más baratos en Mercari JP',
+    dash_japan_desc:'Productos que en Japón están más baratos que en eBay USA ahora mismo.',
+    dash_news:'🔔 Noticias del mercado',dash_movers:'🔥 Más buscados hoy',dash_vs:'vs USA',
+    login_title:'Bienvenido',login_sub:'Accede para guardar tu colección y activar alertas',
+    login_google:'Continuar con Google',login_btn:'Entrar →',login_terms:'Al entrar aceptas los',login_terms_link:'Términos de uso',
+    add_modal_title:'Añadir a mi colección',add_btn:'Añadir a mi colección',
+    prem_modal_title:'JapanGemu Premium',prem_modal_sub:'Alertas en todos los mercados, incluyendo Japón',
+    prem_features:['Alerta cuando aparezca tu producto en venta','Monitoreo de Mercari JP cada 30 minutos','Alertas en eBay, Wallapop y Mercado Libre','Filtro opcional de precio máximo','Historial de precios — 12 meses'],
+    prem_start:'Empezar por 3$/mes',prem_cancel:'Cancela cuando quieras · Sin permanencia',
+  }
+};
+
+let currentLang = localStorage.getItem('jg_lang') || 'en';
+function t(key) { return (LANG[currentLang] && LANG[currentLang][key]) || (LANG.en && LANG.en[key]) || key; }
+
+function switchLang() {
+  currentLang = currentLang === 'en' ? 'es' : 'en';
+  localStorage.setItem('jg_lang', currentLang);
+  applyLang();
+}
+
+function applyLang() {
+  const btn = document.getElementById('lang-btn');
+  if (btn) btn.textContent = currentLang === 'en' ? 'ES' : 'EN';
+
+  // Nav tabs
+  const tabs = document.querySelectorAll('.nav-tab');
+  const navKeys = ['nav_search','nav_collection','nav_wishlist','nav_dashboard'];
+  const navIcons = ['🔍 ','📦 ','⭐ ','📊 '];
+  tabs.forEach((tab,i) => { if(navKeys[i]) tab.textContent = navIcons[i] + t(navKeys[i]); });
+
+  // Hero
+  const ey = document.querySelector('.hero-eyebrow'); if(ey) ey.textContent = t('hero_eyebrow');
+  const ht = document.querySelector('.hero-title'); if(ht) ht.innerHTML = t('hero_title');
+  const hs = document.querySelector('.hero-sub'); if(hs) hs.textContent = t('hero_sub');
+  const hi = document.querySelector('.empty-hint'); if(hi) hi.textContent = t('empty_hint');
+  const si = document.getElementById('search-inp'); if(si) si.placeholder = t('search_placeholder');
+
+  // Search filters
+  const sfs = document.querySelectorAll('.sf-btn');
+  ['filter_all','filter_games','filter_consoles','filter_figures'].forEach((k,i)=>{ if(sfs[i]) sfs[i].textContent = t(k); });
+
+  // Portfolio page
+  const pages = document.querySelectorAll('.page-h');
+  if(pages[0]) pages[0].innerHTML = t('port_heading') + ' <span class="acc">' + t('port_heading_accent') + '</span>';
+  const subs = document.querySelectorAll('.page-sub');
+  if(subs[0]) subs[0].textContent = t('port_sub');
+  const addBtns = document.querySelectorAll('.page-top .btn-primary');
+  if(addBtns[0]) addBtns[0].textContent = t('port_add');
+
+  // Wishlist page
+  if(pages[1]) pages[1].innerHTML = t('wish_heading') + ' <span class="acc">' + t('wish_heading_accent') + '</span>';
+  if(subs[1]) subs[1].textContent = t('wish_sub');
+  const pt = document.querySelector('.prem-txt strong'); if(pt) pt.textContent = t('prem_title');
+  const pd = document.querySelector('.prem-txt p'); if(pd) pd.textContent = t('prem_desc');
+  const pb = document.querySelector('.btn-gold'); if(pb) pb.textContent = t('prem_btn');
+  const aw = document.querySelector('.add-watch'); if(aw) aw.textContent = t('wish_add');
+
+  // Dashboard
+  const dh = document.querySelectorAll('.page-h')[2];
+  if(dh) dh.innerHTML = t('dash_heading') + ' <span class="acc">' + t('dash_heading_accent') + '</span>';
+
+  // Premium modal
+  const pmt = document.querySelector('#prem-modal .modal-title'); if(pmt) pmt.textContent = t('prem_modal_title');
+  const pms = document.querySelector('#prem-modal .modal-sub'); if(pms) pms.textContent = t('prem_modal_sub');
+  const pmf = document.querySelector('.prem-feats');
+  if(pmf) pmf.innerHTML = t('prem_features').map(f=>`<li>${f}</li>`).join('');
+  const pmb = document.querySelector('#prem-modal .btn-primary'); if(pmb) pmb.textContent = t('prem_start');
+  const pmc = document.querySelector('#prem-modal .modal-foot'); if(pmc) pmc.textContent = t('prem_cancel');
+
+  // Login modal
+  const lt = document.querySelector('#login-modal .modal-title'); if(lt) lt.textContent = t('login_title');
+  const ls = document.querySelector('#login-modal .modal-sub'); if(ls) ls.textContent = t('login_sub');
+  const lg = document.querySelector('.btn-google'); if(lg) lg.innerHTML = '<span>G</span> ' + t('login_google');
+  const lb = document.querySelector('#login-modal .btn-primary'); if(lb) lb.textContent = t('login_btn');
+  const li = document.getElementById('login-email'); if(li) li.placeholder = currentLang === 'en' ? 'your@email.com' : 'tu@email.com';
+
+  // Add modal
+  const amt = document.querySelector('#add-modal .modal-title'); if(amt) amt.textContent = t('add_modal_title');
+  const asi = document.getElementById('add-search-inp'); if(asi) asi.placeholder = currentLang === 'en' ? 'Search for a game or figure...' : 'Busca el juego o figura...';
+  const amb = document.querySelector('#add-modal .btn-primary.wide'); if(amb) amb.textContent = t('add_btn');
+
+  // Re-render dynamic pages
+  if(S.page === 'portfolio') renderPortfolio();
+  if(S.page === 'wishlist') renderWishlist();
+  if(S.page === 'dashboard') renderDashboard();
+}
+
 // INIT
 (function() {
-  const t = localStorage.getItem('jg_theme');
-  if (t === 'light') { document.body.classList.add('light'); document.querySelector('[onclick="toggleTheme()"]').textContent = '☀️'; }
-  if (S.userId) document.getElementById('account-area').innerHTML = '<button class="btn-primary" onclick="doLogout()">Salir</button>';
+  const savedTheme = localStorage.getItem('jg_theme');
+  if (savedTheme === 'light') { document.body.classList.add('light'); document.querySelector('[onclick="toggleTheme()"]').textContent = '☀️'; }
+  if (S.userId) document.getElementById('account-area').innerHTML = '<button class="btn-primary" onclick="doLogout()">Sign Out</button>';
   renderPortfolio();
+  applyLang();
 })();
 </script>
 </body>
